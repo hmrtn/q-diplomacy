@@ -1,6 +1,6 @@
 # quadratic-diplomacy
 
-Use this general purpose dApp skeleton to begin squaring diplomacy! 
+Use this general purpose dApp skeleton to begin the quadratic diplomatic quest! 
 
 ## Getting Started
 
