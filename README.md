@@ -12,11 +12,12 @@ cd quadratic-diplomacy
 npm install
 ```
 
-Once Hardhat is installed, navigate to the React App directory and install the dependencies. 
+Once Hardhat is installed, navigate to the React App directory, install the dependencies, and start the app! 
 
 ```sh
 cd app
 npm install
+npm start
 ```
 
 ### Hardhat Quickstart
