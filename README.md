@@ -1,5 +1,7 @@
 # quadratic-diplomacy
 
+Use this general purpose dApp skeleton to square that diplomacy! 
+
 ## Getting Started
 
 Clone this repo and install dependencies. 
@@ -7,6 +9,13 @@ Clone this repo and install dependencies.
 ```sh
 git clone https://github.com/lazl0x/quadratic-diplomacy.git
 cd quadratic-diplomacy
+npm install
+```
+
+Once Hardhat is installed, navigate to the React App directory and install the dependencies. 
+
+```sh
+cd app
 npm install
 ```
 
