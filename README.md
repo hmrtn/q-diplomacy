@@ -1,6 +1,6 @@
 # quadratic-diplomacy
 
-Use this general purpose dApp skeleton to square that diplomacy! 
+Use this general purpose dApp skeleton to begin squaring diplomacy! 
 
 ## Getting Started
 
