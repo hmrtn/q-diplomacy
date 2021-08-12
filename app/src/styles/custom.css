@@ -1,0 +1,27 @@
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.scrollbar {
+  margin-left: 22px;
+  float: left;
+  height: 300px;
+  width: 65px;
+  margin-bottom: 25px;
+}
+
+.scrollbar::-webkit-scrollbar {
+  width: 12px;
+  /* background-color: aqua; */
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 6px rgba(255, 0, 0, 0.6);
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  /* background-color: gold; */
+  -webkit-box-shadow: inset 0 0 6px rgba(236, 240, 47, 0.5);
+}

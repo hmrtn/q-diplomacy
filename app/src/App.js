@@ -1,16 +1,37 @@
-import logo from './logo.svg';
-import './App.css';
+import logo from "./logo.svg";
+import "./App.css";
+import "./styles/output.css";
+import "./styles/custom.css";
+
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  useParams,
+  useRouteMatch,
+} from "react-router-dom";
+import Header from "./components/header";
+import Home from "./views/Home";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-      </header>
-    </div>
+    <Router>
+      <Header />
+      <div>
+        <Switch>
+          <Route exact path="/">
+            <Home />
+          </Route>
+          {/* <Route path="/about">
+            <About />
+          </Route>
+          <Route path="/nft/:id">
+            <NftDetail />
+          </Route> */}
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
