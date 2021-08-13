@@ -1,7 +1,13 @@
 import { Iconly } from "react-iconly";
 import React, { useState, useEffect, useSelector, useContext } from "react";
+import { useHistory } from "react-router-dom";
 import Select from "react-select";
 import SideBar from "../components/sidebar";
+
+import Store from "../stores/store";
+const store = Store.store;
+const emitter = Store.emitter;
+const dispatcher = Store.dispatcher;
 
 const Styles = {
   sortSelectedOption: {
@@ -20,13 +26,15 @@ export default function Home() {
   const [addressList, setAddressList] = useState([]);
   const [nameAddressMapping, setNameAddressMapping] = useState({});
   const [electionName, setElectionName] = useState("");
+  const route_history = useHistory();
 
   useEffect(() => {
     init();
   }, []);
 
-  const init = async () => {
+  const testAddElection = () => {
     let election = {
+      id: 0,
       name: "Build #1",
       creator: {
         name: "@owocki",
@@ -36,10 +44,46 @@ export default function Home() {
         type: "Going on",
       },
       created_at: "6/4/2021",
+      totalTokens: 10,
+      workerList: [
+        {
+          name: "swapp",
+          address: "0xDC25EF3F5B8A186998338A2ADA83795FBA2D695E",
+          voteGiven: 0,
+        },
+        {
+          name: "hans",
+          address: "0xDC25233232F5B8A186998338A212334A2D695E",
+          voteGiven: 0,
+        },
+        {
+          name: "austin",
+          address: "0xASC3232F5B8A186998338A21SCFFFD695E",
+          voteGiven: 0,
+        },
+        {
+          name: "ryan",
+          address: "0xSCFDD8A186998338ASDSCCCC95E",
+          voteGiven: 0,
+        },
+      ],
     };
-    let elections = [];
-    elections.push(election);
-    setElectionList(elections);
+    let elections = store.getStore().elections;
+    let foundElection = elections.filter((e) => e.id == 0);
+    if (foundElection.length == 0) {
+      elections.push(election);
+      //add to global store
+      dispatcher.dispatch({
+        type: "ADD_ELECTION",
+        content: { election: election },
+      });
+      //set local store
+      setElectionList(elections);
+    }
+  };
+
+  const init = async () => {
+    testAddElection();
 
     let name_address_mapping = {};
     name_address_mapping["swapp"] =
@@ -55,6 +99,10 @@ export default function Home() {
     });
     setAddressList(addressList);
   };
+
+  emitter.on("StoreUpdated", async () => {
+    console.log("StoreUpdated");
+  });
 
   const openNewElectionWindow = () => {
     console.log("openNewElectionWindow");
@@ -78,6 +126,7 @@ export default function Home() {
     if (electionName != "" && selectedOption != null) {
       let today = new Date(Date.now()).toLocaleDateString();
       let election = {
+        id: electionList.length,
         name: electionName,
         creator: {
           name: "@owocki",
@@ -87,9 +136,23 @@ export default function Home() {
           type: "Going on",
         },
         created_at: today,
+        totalTokens: 10,
         workerList: [],
       };
+      selectedOption.map((opt) => {
+        let worker = {
+          name: opt.label,
+          address: nameAddressMapping[opt.value],
+          voteGiven: 0,
+        };
+        election.workerList.push(worker);
+      });
       setElectionList((oldArray) => [...oldArray, election]);
+      //add to global store
+      dispatcher.dispatch({
+        type: "ADD_ELECTION",
+        content: { election: election },
+      });
       toggleModal();
     }
   };
@@ -98,6 +161,10 @@ export default function Home() {
     setElectionName("");
     setSelectedOption(null);
     toggleModal();
+  };
+
+  const viewElection = (id) => {
+    route_history.push("/voting/" + id);
   };
 
   return (
@@ -141,6 +208,7 @@ export default function Home() {
                       <th class="px-4 py-3">Creator</th>
                       <th class="px-4 py-3">Status</th>
                       <th class="px-4 py-3">Creation Date</th>
+                      <th class="px-4 py-3">Action</th>
                     </tr>
                   </thead>
                   <tbody class="bg-white">
@@ -179,6 +247,16 @@ export default function Home() {
                           </td>
                           <td class="px-4 py-3 text-sm border">
                             {e.created_at}
+                          </td>
+                          <td class="px-4 py-3 text-sm border">
+                            <div className="flex justify-between">
+                              <button
+                                class="w-1/2 px-4 font-bold text-white bg-blue-500 rounded-full hover:bg-blue-700 focus:outline-none focus:shadow-outline"
+                                onClick={() => viewElection(e.id)}
+                              >
+                                View
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

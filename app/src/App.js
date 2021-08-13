@@ -13,6 +13,7 @@ import {
 } from "react-router-dom";
 import Header from "./components/header";
 import Home from "./views/Home";
+import Voting from "./views/Voting";
 
 function App() {
   return (
@@ -23,12 +24,13 @@ function App() {
           <Route exact path="/">
             <Home />
           </Route>
+          <Route path="/voting/:id">
+            <Voting />
+          </Route>
           {/* <Route path="/about">
             <About />
           </Route>
-          <Route path="/nft/:id">
-            <NftDetail />
-          </Route> */}
+           */}
         </Switch>
       </div>
     </Router>
