@@ -48,22 +48,6 @@ contract Diplomacy {
 
     }
 
-    function endElection(uint electionId) public {
-
-        Election storage election = elections[electionId];
-        election.active = false; 
-
-        for ( uint i = 0; i < election.candidates.length; i++ ) {
-            address candidate = election.candidates[i];
-            election.result[candidate] = election.result[candidate] * election.result[candidate];
-        }
-        
-        _payout(electionId);
-
-        emit ElectionEnded(electionId);
-
-    }
-
     function castBallot(
         uint electionId,
         address[] memory _adrs, 
@@ -77,25 +61,45 @@ contract Diplomacy {
         });
 
         for ( uint i = 0; i < election.candidates.length; i++ ) {
-            election.score[_adrs[i]] += _votes[i];
+            election.score[_adrs[i]] += sqrt(_votes[i]);
         }
 
         emit BallotCast(msg.sender);
 
     }
 
+    function endElection(uint electionId) public {
+
+        Election storage election = elections[electionId];
+        election.active = false; 
+
+        for ( uint i = 0; i < election.candidates.length; i++ ) {
+            address candidate = election.candidates[i];
+            election.result[candidate] = election.score[candidate] * election.score[candidate];
+        }
+        
+        _payout(electionId);
+
+        emit ElectionEnded(electionId);
+
+    }
+
     function _payout(uint electionId) internal {
 
+        // TODO: Fix this.
         Election storage election = elections[electionId]; 
         
         uint total; 
         for ( uint i = 0; i < election.candidates.length; i++) {
-            total += election.score[election.candidates[i]];
+            total += election.result[election.candidates[i]];
+        }
+
+        mapping (address => uint) storage payRatio; 
+        for ( uint i = 0; i < election.candidates.length; i++ ) {
+            
         }
 
         console.log(total);
-
-
 
     }
 

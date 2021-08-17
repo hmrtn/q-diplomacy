@@ -21,7 +21,7 @@ import {
   useUserSigner,
 } from "./hooks";
 // import Hints from "./Hints";
-import { Elections, Hints, Subgraph } from "./views";
+import { Voting, Elections, Hints, Subgraph } from "./views";
 
 const { ethers } = require("ethers");
 /*
@@ -446,6 +446,9 @@ function App(props) {
               address={address}
               blockExplorer={blockExplorer}
             />
+          </Route>
+          <Route path="/voting/:id">
+            <Voting />
           </Route>
           <Route path="/hints">
             <Hints

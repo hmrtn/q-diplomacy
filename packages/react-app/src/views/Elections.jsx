@@ -83,8 +83,9 @@ export default function Elections({
     setNewElecAddr(addrs);
   }
 
-  function viewElection() {
-    route_history.push("/voting/" + id);
+  function viewElection(record) {
+    route_history.push("/voting/" + record.key);
+    // console.log("record ", record);
   }
 
   const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
@@ -113,9 +114,9 @@ export default function Elections({
     {
       title: "Action",
       key: "action",
-      render: () => (
+      render: (text, record, index) => (
         <Space size="middle">
-          <Button type="primary" size="small" onClick={() => viewElection()}>
+          <Button type="primary" size="small" onClick={() => viewElection(record)}>
             View
           </Button>
         </Space>
