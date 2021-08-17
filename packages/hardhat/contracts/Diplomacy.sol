@@ -44,4 +44,5 @@ contract Diplomacy {
 	function _deposit() public payable {
     
   	}
+
 }

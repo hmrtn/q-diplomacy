@@ -16,9 +16,11 @@ import {
   Form,
   Checkbox,
   Select,
+  Space,
 } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import { Address, Balance } from "../components";
 
 import { useEventListener } from "../hooks";
@@ -46,6 +48,8 @@ export default function Elections({
   const [isCreating, setIsCreating] = useState(false);
 
   const [form] = Form.useForm();
+
+  const route_history = useHistory();
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -79,6 +83,10 @@ export default function Elections({
     setNewElecAddr(addrs);
   }
 
+  function viewElection() {
+    route_history.push("/voting/" + id);
+  }
+
   const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
 
   const columns = [
@@ -101,6 +109,17 @@ export default function Elections({
       title: "# Voted",
       dataIndex: "n_voted",
       key: "n_voted",
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: () => (
+        <Space size="middle">
+          <Button type="primary" size="small" onClick={() => viewElection()}>
+            View
+          </Button>
+        </Space>
+      ),
     },
   ];
   useEffect(() => {
