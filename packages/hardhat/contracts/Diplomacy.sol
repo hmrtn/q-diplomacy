@@ -18,7 +18,7 @@ contract Diplomacy {
 
     mapping (uint => Election) elections; 
 
-    uint numElections;
+    uint public numElections;
 
     event ElectionCreated(address _creator, uint _electionId);
     
@@ -36,4 +36,12 @@ contract Diplomacy {
 
     }
 
+	function getElectionById(uint id) public view returns (string memory name, uint n_addr) {
+		name = elections[id].name;
+		n_addr = elections[id].candidates.length;
+	}
+
+	function _deposit() public payable {
+    
+  	}
 }
