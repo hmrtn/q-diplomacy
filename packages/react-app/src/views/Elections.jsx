@@ -161,9 +161,11 @@ export default function Elections({
     let data = [];
     for (let i = 0; i < numElections; i++) {
       const election = await readContracts.Diplomacy.getElectionById(i);
+      console.log("election ", election);
       const name = election.name;
       const n_addr = election.n_addr.toNumber();
-      data.push({ key: i, created_date: "8/16/2021", name: name, n_workers: n_addr, n_voted: 0 });
+      const created_date = new Date(election.createdAt.toNumber() * 1000).toString();
+      data.push({ key: i, created_date: created_date, name: name, n_workers: n_addr, n_voted: 0 });
     }
     setTableDataSrc(data);
   };

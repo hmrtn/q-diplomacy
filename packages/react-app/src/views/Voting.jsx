@@ -1,4 +1,6 @@
-export default function Elections({
+import { useParams } from "react-router-dom";
+
+export default function Voting({
   address,
   mainnetProvider,
   localProvider,
@@ -7,4 +9,7 @@ export default function Elections({
   tx,
   readContracts,
   writeContracts,
-}) {}
+}) {
+  let { id } = useParams();
+  return <>Voting {id}</>;
+}

@@ -5,8 +5,21 @@
       "chainId": "31337",
       "contracts": {
         "Diplomacy": {
-          "address": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+          "address": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
           "abi": [
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "_caster",
+                  "type": "address"
+                }
+              ],
+              "name": "BallotCast",
+              "type": "event"
+            },
             {
               "anonymous": false,
               "inputs": [
@@ -27,6 +40,19 @@
               "type": "event"
             },
             {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "_electionId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "ElectionEnded",
+              "type": "event"
+            },
+            {
               "inputs": [],
               "name": "_deposit",
               "outputs": [],
@@ -37,7 +63,43 @@
               "inputs": [
                 {
                   "internalType": "uint256",
-                  "name": "id",
+                  "name": "electionId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address[]",
+                  "name": "_adrs",
+                  "type": "address[]"
+                },
+                {
+                  "internalType": "uint256[]",
+                  "name": "_votes",
+                  "type": "uint256[]"
+                }
+              ],
+              "name": "castBallot",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "endElection",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
                   "type": "uint256"
                 }
               ],
@@ -51,6 +113,11 @@
                 {
                   "internalType": "uint256",
                   "name": "n_addr",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "createdAt",
                   "type": "uint256"
                 }
               ],
@@ -78,7 +145,7 @@
                   "type": "uint256"
                 }
               ],
-              "stateMutability": "nonpayable",
+              "stateMutability": "payable",
               "type": "function"
             },
             {
@@ -91,13 +158,6 @@
                   "type": "uint256"
                 }
               ],
-              "stateMutability": "view",
-              "type": "function"
-            },
-            {
-              "inputs": [],
-              "name": "sayHello",
-              "outputs": [],
               "stateMutability": "view",
               "type": "function"
             }
