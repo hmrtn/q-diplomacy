@@ -16,6 +16,7 @@ contract Diplomacy {
     struct Election {
         string name; 
         bool active;
+        uint createdAt;
         address[] candidates;
         mapping (address => uint) score;
         mapping (address => uint) result; 
@@ -36,11 +37,12 @@ contract Diplomacy {
         address[] memory _candidates
     ) public payable returns (uint electionId) {
         
-        electionId = numElections.add(1); 
+        electionId = numElections += 1; 
         Election storage election = elections[electionId];
         election.name = _name; 
         election.candidates = _candidates; 
         election.active = true;
+        election.createdAt = block.timestamp;
 
         emit ElectionCreated(msg.sender, electionId);
 
@@ -107,9 +109,12 @@ contract Diplomacy {
 
     }
 
-	function getElectionById(uint id) public view returns (string memory name, uint n_addr) {
-		name = elections[id].name;
-		n_addr = elections[id].candidates.length;
+	function getElectionById(
+        uint electionId
+    ) public view returns (string memory name, uint n_addr, uint createdAt) {
+		name = elections[electionId].name;
+		n_addr = elections[electionId].candidates.length;
+        createdAt = elections[electionId].createdAt;
 	}
 
 	function _deposit() public payable {

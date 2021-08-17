@@ -5,11 +5,7 @@
       "chainId": "31337",
       "contracts": {
         "Diplomacy": {
-<<<<<<< HEAD
-          "address": "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
-=======
-          "address": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
->>>>>>> 30aa8968db26587c2782b0eb8c438ba09e6cd486
+          "address": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
           "abi": [
             {
               "anonymous": false,
@@ -44,7 +40,6 @@
               "type": "event"
             },
             {
-<<<<<<< HEAD
               "anonymous": false,
               "inputs": [
                 {
@@ -56,19 +51,18 @@
               ],
               "name": "ElectionEnded",
               "type": "event"
-=======
+            },
+            {
               "inputs": [],
               "name": "_deposit",
               "outputs": [],
               "stateMutability": "payable",
               "type": "function"
->>>>>>> 30aa8968db26587c2782b0eb8c438ba09e6cd486
             },
             {
               "inputs": [
                 {
                   "internalType": "uint256",
-<<<<<<< HEAD
                   "name": "electionId",
                   "type": "uint256"
                 },
@@ -99,8 +93,13 @@
               "name": "endElection",
               "outputs": [],
               "stateMutability": "nonpayable",
-=======
-                  "name": "id",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
                   "type": "uint256"
                 }
               ],
@@ -115,10 +114,14 @@
                   "internalType": "uint256",
                   "name": "n_addr",
                   "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "createdAt",
+                  "type": "uint256"
                 }
               ],
               "stateMutability": "view",
->>>>>>> 30aa8968db26587c2782b0eb8c438ba09e6cd486
               "type": "function"
             },
             {
