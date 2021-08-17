@@ -5,6 +5,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "_caster",
+        "type": "address"
+      }
+    ],
+    "name": "BallotCast",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "_creator",
         "type": "address"
       },
@@ -17,6 +30,55 @@
     ],
     "name": "ElectionCreated",
     "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_electionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ElectionEnded",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "electionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "_adrs",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_votes",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "castBallot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "electionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "endElection",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -39,7 +101,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   }
 ]

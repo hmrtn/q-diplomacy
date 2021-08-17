@@ -5,8 +5,21 @@
       "chainId": "31337",
       "contracts": {
         "Diplomacy": {
-          "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "address": "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
           "abi": [
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "_caster",
+                  "type": "address"
+                }
+              ],
+              "name": "BallotCast",
+              "type": "event"
+            },
             {
               "anonymous": false,
               "inputs": [
@@ -25,6 +38,55 @@
               ],
               "name": "ElectionCreated",
               "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "_electionId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "ElectionEnded",
+              "type": "event"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address[]",
+                  "name": "_adrs",
+                  "type": "address[]"
+                },
+                {
+                  "internalType": "uint256[]",
+                  "name": "_votes",
+                  "type": "uint256[]"
+                }
+              ],
+              "name": "castBallot",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "endElection",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
             },
             {
               "inputs": [
@@ -47,7 +109,7 @@
                   "type": "uint256"
                 }
               ],
-              "stateMutability": "nonpayable",
+              "stateMutability": "payable",
               "type": "function"
             }
           ]
