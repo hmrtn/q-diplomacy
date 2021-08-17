@@ -20,6 +20,19 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     //const yourContract = await ethers.getContractAt('YourContract', "0xaAC799eC2d00C013f1F11c37E654e59B0429DF6A") //<-- if you want to instantiate a version of a contract at a specific address!
   */
 
+  const Diplomacy = await ethers.getContract("Diplomacy", deployer);
+
+  await Diplomacy._deposit({
+    value: ethers.utils.parseEther("1"),
+  });
+
+  await Diplomacy.newElection("Build #1", [
+    "0x76c48E1F02774C40372a3497620D946136136172",
+    "0x01684C57AE8a4226271068210Ce1cCED865a5AfC",
+    "0xf5De4337Ac5332aF11BffbeC45D950bDDBc1493F",
+    "0x4E53E14de4e264AC2C3fF501ed3Bd6c4Ad63B9A1",
+  ]);
+
   /*
   //If you want to send value to an address from the deployer
   const deployerWallet = ethers.provider.getSigner()

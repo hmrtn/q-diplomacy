@@ -1,4 +1,8 @@
 {
   "localhost_YourContractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+<<<<<<< HEAD
   "localhost_DiplomacyAddress": "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"
+=======
+  "localhost_DiplomacyAddress": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
+>>>>>>> 30aa8968db26587c2782b0eb8c438ba09e6cd486
 }
