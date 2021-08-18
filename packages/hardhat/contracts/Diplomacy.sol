@@ -170,7 +170,7 @@ contract Diplomacy is AccessControl {
     }
   }
 
-  function setElectionAdminRole(address adr) internal {
+  function setElectionAdminRole(address adr) public {
     _setupRole(ELECTION_ADMIN_ROLE, adr);
   }
 
