@@ -386,10 +386,10 @@ function App(props) {
               }}
               to="/"
             >
-              Diplomacy
+              Diplomacy Contract
             </Link>
           </Menu.Item>
-          <Menu.Item key="/hints">
+          {/* <Menu.Item key="/hints">
             <Link
               onClick={() => {
                 setRoute("/hints");
@@ -398,7 +398,7 @@ function App(props) {
             >
               Hints
             </Link>
-          </Menu.Item>
+          </Menu.Item> */}
           <Menu.Item key="/elections">
             <Link
               onClick={() => {
@@ -409,7 +409,7 @@ function App(props) {
               Elections
             </Link>
           </Menu.Item>
-          <Menu.Item key="/mainnetdai">
+          {/* <Menu.Item key="/mainnetdai">
             <Link
               onClick={() => {
                 setRoute("/mainnetdai");
@@ -418,8 +418,8 @@ function App(props) {
             >
               Mainnet DAI
             </Link>
-          </Menu.Item>
-          <Menu.Item key="/subgraph">
+          </Menu.Item> */}
+          {/* <Menu.Item key="/subgraph">
             <Link
               onClick={() => {
                 setRoute("/subgraph");
@@ -428,7 +428,7 @@ function App(props) {
             >
               Subgraph
             </Link>
-          </Menu.Item>
+          </Menu.Item> */}
         </Menu>
 
         <Switch>
