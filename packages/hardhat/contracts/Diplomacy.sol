@@ -102,7 +102,7 @@ contract Diplomacy is AccessControl {
     // }); 
 
     for ( uint i = 0; i < _adrs.length; i++ ) {
-      election.scores[_adrs[i]] += PRBMathSD59x18.sqrt(_votes[i]);
+      election.scores[_adrs[i]] += _votes[i]; //PRBMathSD59x18.sqrt(_votes[i]);
     }
 
     election.voted[msg.sender] = true;
@@ -132,9 +132,9 @@ contract Diplomacy is AccessControl {
     
   // }
 
-  // function _payout(uint electionId) internal {
+  function _payout(uint electionId, address[] memory _adrs, uint[] memory _pay) internal {
     
-  // }
+  }
 
   
   // Check
@@ -185,9 +185,9 @@ contract Diplomacy is AccessControl {
       uint256 funds,
       int256 votes
   ) {
-		name = elections[electionId].name;
+		  name = elections[electionId].name;
     	candidates = elections[electionId].candidates;
-		n_addr = elections[electionId].candidates.length;
+		  n_addr = elections[electionId].candidates.length;
     	createdAt = elections[electionId].createdAt;
     	funds = elections[electionId].funds;
     	votes = elections[electionId].votes;
@@ -207,6 +207,15 @@ contract Diplomacy is AccessControl {
       address candidate = elections[electionId].candidates[i];
       if ( elections[electionId].voted[candidate] ) {
         count++;
+      }
+    }
+  }
+
+  function canVote(uint electionId, address _sender) public view returns (bool status) {
+    for ( uint i = 0; i < elections[electionId].candidates.length; i++ ) {
+      address candidate = elections[electionId].candidates[i];
+      if ( _sender == candidate ) {
+        status = true;
       }
     }
   }

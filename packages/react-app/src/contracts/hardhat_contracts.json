@@ -5,7 +5,7 @@
       "chainId": "31337",
       "contracts": {
         "Diplomacy": {
-          "address": "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F",
+          "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
           "abi": [
             {
               "inputs": [],
@@ -48,28 +48,6 @@
                 }
               ],
               "name": "PRBMathSD59x18__MulOverflow",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "int256",
-                  "name": "x",
-                  "type": "int256"
-                }
-              ],
-              "name": "PRBMathSD59x18__SqrtNegativeInput",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "int256",
-                  "name": "x",
-                  "type": "int256"
-                }
-              ],
-              "name": "PRBMathSD59x18__SqrtOverflow",
               "type": "error"
             },
             {
@@ -229,6 +207,30 @@
                   "internalType": "bytes32",
                   "name": "",
                   "type": "bytes32"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "_sender",
+                  "type": "address"
+                }
+              ],
+              "name": "canVote",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "status",
+                  "type": "bool"
                 }
               ],
               "stateMutability": "view",
