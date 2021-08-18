@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "prb-math/contracts/PRBMathSD59x18.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol"; //https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol
 
-contract YourContract is AccessControl {
+contract Diplomacy is AccessControl {
 
   using PRBMathSD59x18 for int256;
   using SafeMath for uint; 
@@ -31,7 +31,7 @@ contract YourContract is AccessControl {
     // mapping (address => Ballot) ballots;    // Voter to cast ballot
   }
   
-  constructor() public {
+  constructor() {
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
 
@@ -57,24 +57,24 @@ contract YourContract is AccessControl {
     _;
   }
 
-  uint numElections;
+  uint public numElections;
   mapping (uint => Election) public elections;
 
   function newElection(
     string memory _name, 
-    uint256 _allocatedFunds, 
-    int256 _allocatedVotes, 
+    uint256 _funds, 
+    int256 _votes, 
     address[] memory _adrs
   ) public returns (uint electionId) {
     
     // NOTE: This does not check for future funds balance! (If multiple elections)
-    require( _allocatedFunds <= address(this).balance,     "Not enough balance!" );
+    // require( _funds <= address(this).balance,     "Not enough balance!" );
 
     electionId = numElections++; 
     Election storage election = elections[electionId];
     election.name = _name;
-    election.funds = _allocatedFunds;
-    election.votes = _allocatedVotes;
+    election.funds = _funds;
+    election.votes = _votes;
     election.candidates = _adrs;
     election.createdAt = block.timestamp;
     election.active = true;
@@ -128,13 +128,13 @@ contract YourContract is AccessControl {
 
   }
 
-//   function _deposit() public payable {
+  // function _deposit() public payable {
     
-//   }
+  // }
 
-  function _payout(uint electionId) internal {
+  // function _payout(uint electionId) internal {
     
-  }
+  // }
 
   
   // Check
@@ -174,40 +174,49 @@ contract YourContract is AccessControl {
     _setupRole(ELECTION_ADMIN_ROLE, adr);
   }
 
+  // // Getters
 
-  // Getters
-  function getElectionResults(uint electionId, address _for) public view returns (int256) {
-    require( !(elections[electionId].active), "Active election!" );
-    return elections[electionId].results[_for];
-  }
 
-  function getElectionScore(uint electionId, address _for) public view returns (int256) {
-    require( !(elections[electionId].active), "Active election!" );
-    return elections[electionId].scores[_for]; 
-  }
+	function getElectionById(
+        uint electionId
+    ) public view returns (string memory name, uint n_addr, uint createdAt) {
+		name = elections[electionId].name;
+		n_addr = elections[electionId].candidates.length;
+    createdAt = elections[electionId].createdAt;
+	}
+
+  // function getElectionResults(uint electionId, address _for) public view returns (int256) {
+  //   require( !(elections[electionId].active), "Active election!" );
+  //   return elections[electionId].results[_for];
+  // }
+
+  // function getElectionScore(uint electionId, address _for) public view returns (int256) {
+  //   require( !(elections[electionId].active), "Active election!" );
+  //   return elections[electionId].scores[_for]; 
+  // }
 
 //   function getElectionCastBallotVotes(uint electionId, address _for) public returns (int256[] memory) { 
 //     require( !(elections[electionId].active), "Active election!");
 //     return elections[electionId].ballots[_for].votes;
 //   }
 
-  function getElectionCandidates(uint electionId) public view returns (address[] memory) {
-    return elections[electionId].candidates;
-  } 
+  // function getElectionCandidates(uint electionId) public view returns (address[] memory) {
+  //   return elections[electionId].candidates;
+  // } 
   
-  function getElectionVotedStatus(uint electionId, address _for) public view returns (bool) {
-    return elections[electionId].voted[_for];
-  }
+  // function getElectionVotedStatus(uint electionId, address _for) public view returns (bool) {
+  //   return elections[electionId].voted[_for];
+  // }
 
-  function getElectionVotedCount(uint electionId) public view returns (uint) {
-    uint count = 0;
-    for ( uint i = 0; i < elections[electionId].candidates.length; i++ ) {
-      if ( elections[electionId].voted[elections[electionId].candidates[i]] == true ) { 
-        count++; 
-      }
-    }
-    return count;
-  }
+  // function getElectionVotedCount(uint electionId) public view returns (uint) {
+  //   uint count = 0;
+  //   for ( uint i = 0; i < elections[electionId].candidates.length; i++ ) {
+  //     if ( elections[electionId].voted[elections[electionId].candidates[i]] == true ) { 
+  //       count++; 
+  //     }
+  //   }
+  //   return count;
+  // }
 
 }
 // pragma solidity ^0.8.0; 
@@ -343,13 +352,6 @@ contract YourContract is AccessControl {
 
 //     }
 
-// 	function getElectionById(
-//         uint electionId
-//     ) public view returns (string memory name, uint n_addr, uint createdAt) {
-// 		name = elections[electionId].name;
-// 		n_addr = elections[electionId].candidates.length;
-//         createdAt = elections[electionId].createdAt;
-// 	}
 
 // 	// function _deposit() public payable {
     
