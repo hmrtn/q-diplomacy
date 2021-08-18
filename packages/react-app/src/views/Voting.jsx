@@ -19,6 +19,7 @@ import {
   Select,
   Space,
 } from "antd";
+import { useEventListener } from "../hooks";
 
 export default function Voting({
   address,
@@ -35,6 +36,8 @@ export default function Voting({
   const [tableDataSrc, setTableDataSrc] = useState([]);
   const [elecName, setElecName] = useState("");
   const [remainTokens, setRemainTokens] = useState(0);
+
+  const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
 
   const columns = [
     {
@@ -106,6 +109,14 @@ export default function Voting({
     }
   }, [readContracts]);
 
+  useEffect(() => {
+    if (readContracts) {
+      if (readContracts.Diplomacy) {
+        console.log("ballot cast event");
+      }
+    }
+  }, [ballotCastEvent]);
+
   const init = async () => {
     const election = await readContracts.Diplomacy.getElectionById(id);
     setElecName(election.name);
@@ -122,7 +133,7 @@ export default function Voting({
     setTableDataSrc(data);
   };
 
-  function castVotes() {
+  const castVotes = async () => {
     console.log("castVotes");
     const addrs = [];
     const votes = [];
@@ -130,7 +141,15 @@ export default function Voting({
       addrs.push(tableDataSrc[i].address);
       votes.push(tableDataSrc[i].n_votes);
     }
-  }
+    const result = tx(writeContracts.Diplomacy.castBallot(id, addrs, votes), update => {
+      console.log("📡 Transaction Update:", update);
+      if (update && (update.status === "confirmed" || update.status === 1)) {
+        console.log(" 🍾 Transaction " + update.hash + " finished!");
+      }
+    });
+    console.log("awaiting metamask/web3 confirm result...", result);
+    console.log(await result);
+  };
 
   return (
     <>

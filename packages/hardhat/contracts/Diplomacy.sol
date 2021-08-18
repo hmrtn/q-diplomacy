@@ -177,12 +177,20 @@ contract Diplomacy is AccessControl {
   // // Getters
 
 
-	function getElectionById(
-        uint electionId
-    ) public view returns (string memory name, uint n_addr, uint createdAt) {
+	function getElectionById(uint electionId) public view returns (
+      string memory name, 
+      address[] memory candidates,
+      uint n_addr, 
+      uint createdAt,
+      uint256 funds,
+      int256 votes
+  ) {
 		name = elections[electionId].name;
+    	candidates = elections[electionId].candidates;
 		n_addr = elections[electionId].candidates.length;
-    createdAt = elections[electionId].createdAt;
+    	createdAt = elections[electionId].createdAt;
+    	funds = elections[electionId].funds;
+    	votes = elections[electionId].votes;
 	}
 
 	

@@ -41,6 +41,7 @@ export default function Elections({
   const [tableDataSrc, setTableDataSrc] = useState([]);
   const [newElecName, setNewElecName] = useState("");
   const [newElecAllocatedVotes, setNewElecAllocatedVotes] = useState(10);
+  const [newElecAllocatedFunds, setNewElecAllocatedFunds] = useState(1);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -187,21 +188,24 @@ export default function Elections({
 
   const onFinish = async () => {
     setIsCreating(true);
-    const result = tx(writeContracts.Diplomacy.newElection(newElecName, newElecAllocatedVotes, newElecAddr), update => {
-      console.log("📡 Transaction Update:", update);
-      if (update && (update.status === "confirmed" || update.status === 1)) {
-        console.log(" 🍾 Transaction " + update.hash + " finished!");
-        // console.log(
-        //   " ⛽️ " +
-        //     update.gasUsed +
-        //     "/" +
-        //     (update.gasLimit || update.gas) +
-        //     " @ " +
-        //     parseFloat(update.gasPrice) / 1000000000 +
-        //     " gwei",
-        // );
-      }
-    });
+    const result = tx(
+      writeContracts.Diplomacy.newElection(newElecName, newElecAllocatedFunds, newElecAllocatedVotes, newElecAddr),
+      update => {
+        console.log("📡 Transaction Update:", update);
+        if (update && (update.status === "confirmed" || update.status === 1)) {
+          console.log(" 🍾 Transaction " + update.hash + " finished!");
+          // console.log(
+          //   " ⛽️ " +
+          //     update.gasUsed +
+          //     "/" +
+          //     (update.gasLimit || update.gas) +
+          //     " @ " +
+          //     parseFloat(update.gasPrice) / 1000000000 +
+          //     " gwei",
+          // );
+        }
+      },
+    );
     console.log("awaiting metamask/web3 confirm result...", result);
     console.log(await result);
   };
