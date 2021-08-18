@@ -25,6 +25,7 @@ contract Diplomacy is AccessControl {
     address[] candidates;                   // Candidates (who can vote/be voted)
     uint256 funds;
     int256 votes;
+    address creator;
     mapping (address => bool) voted;        // Voter status
     mapping (address => int256) scores;     // Voter to active-election score (sum of root votes)
     mapping (address => int256) results;    // Voter to closed-election result (score ** 2)
@@ -183,7 +184,8 @@ contract Diplomacy is AccessControl {
       uint n_addr, 
       uint createdAt,
       uint256 funds,
-      int256 votes
+      int256 votes, 
+      address creator
   ) {
 		  name = elections[electionId].name;
     	candidates = elections[electionId].candidates;
@@ -191,6 +193,7 @@ contract Diplomacy is AccessControl {
     	createdAt = elections[electionId].createdAt;
     	funds = elections[electionId].funds;
     	votes = elections[electionId].votes;
+      creator = elections[electionId].creator;
 	}
 
   function getElectionScore(uint electionId, address _adr) public view returns (int256){
@@ -218,6 +221,10 @@ contract Diplomacy is AccessControl {
         status = true;
       }
     }
+  }
+
+  function isElectionAdmin(uint electionId, address _sender) public view returns (bool) {
+    return _sender == elections[electionId].creator;
   }
 
   // function getElectionScore(uint electionId, address _for) public view returns (int256) {
