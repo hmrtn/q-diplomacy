@@ -125,6 +125,8 @@ contract Diplomacy is AccessControl {
     
     election.active = false;
 
+    // _payout();
+
     emit ElectionEnded(electionId);
 
   }
@@ -133,7 +135,7 @@ contract Diplomacy is AccessControl {
     
   // }
 
-  function _payout(uint electionId, address[] memory _adrs, uint[] memory _pay) internal {
+  function payout(uint electionId, address[] memory _adrs, uint[] memory _pay) public {
     
   }
 
