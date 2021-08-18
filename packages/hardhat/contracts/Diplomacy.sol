@@ -170,8 +170,8 @@ contract Diplomacy is AccessControl {
     }
   }
 
-  function setElectionAdminRole(address _adr) internal {
-    _setupRole(ELECTION_ADMIN_ROLE, _adr);
+  function setElectionAdminRole(address adr) public {
+    _setupRole(ELECTION_ADMIN_ROLE, adr);
   }
 
   // // Getters
@@ -186,11 +186,11 @@ contract Diplomacy is AccessControl {
       int256 votes
   ) {
 		name = elections[electionId].name;
-    candidates = elections[electionId].candidates;
+    	candidates = elections[electionId].candidates;
 		n_addr = elections[electionId].candidates.length;
-    createdAt = elections[electionId].createdAt;
-    funds = elections[electionId].funds;
-    votes = elections[electionId].votes;
+    	createdAt = elections[electionId].createdAt;
+    	funds = elections[electionId].funds;
+    	votes = elections[electionId].votes;
 	}
 
   function getElectionScore(uint electionId, address _adr) public view returns (int256){
@@ -202,6 +202,15 @@ contract Diplomacy is AccessControl {
     return elections[electionId].results[_adr];
   }
 
+  function getElectionVoted(uint electionId) public view returns(uint count) {
+    for (uint i = 0; i < elections[electionId].candidates.length; i++) {
+      address candidate = elections[electionId].candidates[i];
+      if ( elections[electionId].voted[candidate] ) {
+        count++;
+      }
+    }
+  }
+
   // function getElectionScore(uint electionId, address _for) public view returns (int256) {
   //   require( !(elections[electionId].active), "Active election!" );
   //   return elections[electionId].scores[_for]; 
@@ -211,10 +220,7 @@ contract Diplomacy is AccessControl {
 //     require( !(elections[electionId].active), "Active election!");
 //     return elections[electionId].ballots[_for].votes;
 //   }
-
-  // function getElectionCandidates(uint electionId) public view returns (address[] memory) {
-  //   return elections[electionId].candidates;
-  // } 
+ 
   
   // function getElectionVotedStatus(uint electionId, address _for) public view returns (bool) {
   //   return elections[electionId].voted[_for];

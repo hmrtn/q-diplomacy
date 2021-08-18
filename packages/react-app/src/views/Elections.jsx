@@ -1,5 +1,6 @@
 import { SyncOutlined } from "@ant-design/icons";
 import { utils } from "ethers";
+import { toWei } from "web3-utils";
 import {
   Button,
   Card,
@@ -40,6 +41,8 @@ export default function Elections({
   const [numElections, setNumElections] = useState(0);
   const [tableDataSrc, setTableDataSrc] = useState([]);
   const [newElecName, setNewElecName] = useState("");
+  const [newElecAllocatedVotes, setNewElecAllocatedVotes] = useState(10);
+  const [newElecAllocatedFunds, setNewElecAllocatedFunds] = useState(1);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -71,6 +74,8 @@ export default function Elections({
     bliss: "0xcd3B766CCDd6AE721141F452C550Ca635964ce71",
     varun: "0x2546BcD3c84621e976D8185a91A922aE77ECEc30",
     ryan: "0xdD2FD4581271e230360230F9337D5c0430Bf44C0",
+    bob: "0x6b88d83B4c7C5D0d6C7b503B82d54771A91E6f8f",
+    deployer: "0x1708cE4768724F2C469B8613D2C05462581ED789",
   };
 
   function handleAddrSelected(value) {
@@ -87,6 +92,33 @@ export default function Elections({
     route_history.push("/voting/" + record.key);
     // console.log("record ", record);
   }
+
+  // function endElection(record) {
+  //   console.log("ended election " + record.key);
+  //   writeContracts.Diplomacy.endElection(record.key);
+  // }
+  const endElection = async (record) => {
+    const result = tx(
+      writeContracts.Diplomacy.endElection(record.key),
+      update => {
+        console.log("📡 Transaction Update:", update);
+        if (update && (update.status === "confirmed" || update.status === 1)) {
+          console.log(" 🍾 Transaction " + update.hash + " finished!");
+          // console.log(
+          //   " ⛽️ " +
+          //     update.gasUsed +
+          //     "/" +
+          //     (update.gasLimit || update.gas) +
+          //     " @ " +
+          //     parseFloat(update.gasPrice) / 1000000000 +
+          //     " gwei",
+          // );
+        }
+      },
+    );
+    console.log("awaiting metamask/web3 confirm result...", result);
+    console.log(await result);
+  };
 
   const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
 
@@ -115,11 +147,16 @@ export default function Elections({
       title: "Action",
       key: "action",
       render: (text, record, index) => (
-        <Space size="middle">
-          <Button type="primary" size="small" onClick={() => viewElection(record)}>
-            View
-          </Button>
-        </Space>
+        <>
+          <Space size="middle">
+            <Button type="primary" size="small" onClick={() => viewElection(record)}>
+              View
+            </Button>
+            <Button type="primary" size="small" onClick={() => endElection(record)}>
+              End & Payout
+            </Button>
+          </Space>
+        </>
       ),
     },
   ];
@@ -165,8 +202,10 @@ export default function Elections({
       console.log("election ", election);
       const name = election.name;
       const n_addr = election.n_addr.toNumber();
-      const created_date = new Date(election.createdAt.toNumber() * 1000).toString();
-      data.push({ key: i, created_date: created_date, name: name, n_workers: n_addr, n_voted: 0 });
+      const n_voted = (await readContracts.Diplomacy.getElectionVoted(i)).toNumber();
+      let created_date = new Date(election.createdAt.toNumber() * 1000);
+      created_date = created_date.toISOString().substring(0, 10);
+      data.push({ key: i, created_date: created_date, name: name, n_workers: n_addr, n_voted: n_voted });
     }
     setTableDataSrc(data);
   };
@@ -178,21 +217,24 @@ export default function Elections({
 
   const onFinish = async () => {
     setIsCreating(true);
-    const result = tx(writeContracts.Diplomacy.newElection(newElecName, newElecAddr), update => {
-      console.log("📡 Transaction Update:", update);
-      if (update && (update.status === "confirmed" || update.status === 1)) {
-        console.log(" 🍾 Transaction " + update.hash + " finished!");
-        // console.log(
-        //   " ⛽️ " +
-        //     update.gasUsed +
-        //     "/" +
-        //     (update.gasLimit || update.gas) +
-        //     " @ " +
-        //     parseFloat(update.gasPrice) / 1000000000 +
-        //     " gwei",
-        // );
-      }
-    });
+    const result = tx(
+      writeContracts.Diplomacy.newElection(newElecName, newElecAllocatedFunds, newElecAllocatedVotes, newElecAddr),
+      update => {
+        console.log("📡 Transaction Update:", update);
+        if (update && (update.status === "confirmed" || update.status === 1)) {
+          console.log(" 🍾 Transaction " + update.hash + " finished!");
+          // console.log(
+          //   " ⛽️ " +
+          //     update.gasUsed +
+          //     "/" +
+          //     (update.gasLimit || update.gas) +
+          //     " @ " +
+          //     parseFloat(update.gasPrice) / 1000000000 +
+          //     " gwei",
+          // );
+        }
+      },
+    );
     console.log("awaiting metamask/web3 confirm result...", result);
     console.log(await result);
   };
@@ -212,6 +254,22 @@ export default function Elections({
               placeholder="Election Name"
               onChange={e => {
                 setNewElecName(e.target.value);
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="funds" label="Funds" rules={[{ required: true, message: "Please input funds!" }]}>
+            <Input
+              placeholder="Funds (ETH)"
+              onChange={e => {
+                setNewElecAllocatedFunds(toWei(e.target.value));
+              }}
+            />
+          </Form.Item>
+          <Form.Item name="votes" label="N Votes" rules={[{ required: true, message: "Please input number of votes!" }]}>
+            <Input
+              placeholder="Number of Votes per Candidate"
+              onChange={e => {
+                setNewElecAllocatedVotes(e.target.value);
               }}
             />
           </Form.Item>
@@ -240,7 +298,7 @@ export default function Elections({
           </Form.Item>
         </Form>
       </Modal>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 400, margin: "auto", marginTop: 64 }}>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
         <h2>Elections</h2>
         <div>Number of elections: {numElections}</div>
         <Divider />

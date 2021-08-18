@@ -5,7 +5,7 @@
       "chainId": "31337",
       "contracts": {
         "Diplomacy": {
-          "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
+          "address": "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F",
           "abi": [
             {
               "inputs": [],
@@ -366,12 +366,55 @@
                   "type": "address"
                 }
               ],
+              "name": "getElectionResults",
+              "outputs": [
+                {
+                  "internalType": "int256",
+                  "name": "",
+                  "type": "int256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "_adr",
+                  "type": "address"
+                }
+              ],
               "name": "getElectionScore",
               "outputs": [
                 {
                   "internalType": "int256",
                   "name": "",
                   "type": "int256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "getElectionVoted",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "count",
+                  "type": "uint256"
                 }
               ],
               "stateMutability": "view",
@@ -517,6 +560,19 @@
                 }
               ],
               "name": "revokeRole",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "adr",
+                  "type": "address"
+                }
+              ],
+              "name": "setElectionAdminRole",
               "outputs": [],
               "stateMutability": "nonpayable",
               "type": "function"

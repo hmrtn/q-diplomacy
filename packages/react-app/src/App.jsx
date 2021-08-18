@@ -406,7 +406,7 @@ function App(props) {
               }}
               to="/elections"
             >
-              Create Election
+              Elections
             </Link>
           </Menu.Item>
           {/* <Menu.Item key="/mainnetdai">
@@ -448,7 +448,17 @@ function App(props) {
             />
           </Route>
           <Route path="/voting/:id">
-            <Voting />
+            <Voting
+              address={address}
+              userSigner={userSigner}
+              mainnetProvider={mainnetProvider}
+              localProvider={localProvider}
+              yourLocalBalance={yourLocalBalance}
+              price={price}
+              tx={tx}
+              writeContracts={writeContracts}
+              readContracts={readContracts}
+            />
           </Route>
           <Route path="/hints">
             <Hints

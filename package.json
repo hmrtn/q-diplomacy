@@ -64,7 +64,9 @@
     ]
   },
   "dependencies": {
-    "prb-math": "^2.2.0"
+    "prb-math": "^2.2.0",
+    "web3": "^1.5.2",
+    "web3-utils": "^1.5.2"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^4.2.0"
