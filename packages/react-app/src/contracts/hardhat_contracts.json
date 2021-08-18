@@ -5,7 +5,7 @@
       "chainId": "31337",
       "contracts": {
         "Diplomacy": {
-          "address": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
+          "address": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
           "abi": [
             {
               "inputs": [],
@@ -325,6 +325,11 @@
                   "type": "string"
                 },
                 {
+                  "internalType": "address[]",
+                  "name": "candidates",
+                  "type": "address[]"
+                },
+                {
                   "internalType": "uint256",
                   "name": "n_addr",
                   "type": "uint256"
@@ -333,6 +338,16 @@
                   "internalType": "uint256",
                   "name": "createdAt",
                   "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "funds",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "int256",
+                  "name": "votes",
+                  "type": "int256"
                 }
               ],
               "stateMutability": "view",
