@@ -406,7 +406,7 @@ function App(props) {
               }}
               to="/elections"
             >
-              Elections
+              Create Election
             </Link>
           </Menu.Item>
           {/* <Menu.Item key="/mainnetdai">

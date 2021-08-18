@@ -43,17 +43,17 @@ contract Diplomacy is AccessControl {
   bytes32 internal constant ELECTION_CANDIDATE_ROLE = keccak256("ELECTION_CANDIDATE_ROLE");
 
   modifier onlyContractAdmin() {
-    require( hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Address not Contract Admin!" );
+    require( hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender not Contract Admin!" );
     _;
   }
 
   modifier onlyElectionCandidate() {
-    require( hasRole(ELECTION_CANDIDATE_ROLE, msg.sender), "Address not Election Candidate!" );
+    require( hasRole(ELECTION_CANDIDATE_ROLE, msg.sender), "Sender not Election Candidate!" );
     _;
   }
   
   modifier onlyElectionAdmin() {
-    require( hasRole(ELECTION_ADMIN_ROLE, msg.sender), "Address not Election Admin!" );
+    require( hasRole(ELECTION_ADMIN_ROLE, msg.sender), "Sender not Election Admin!" );
     _;
   }
 
@@ -146,7 +146,7 @@ contract Diplomacy is AccessControl {
 
     require( election.active,                      "Election Not Active!"   );
     require( _adrs.length == _votes.length,        "Address-Vote Mismatch!" );
-    require( !election.voted[msg.sender],          "Address already voted!" );
+    require( !election.voted[msg.sender],          "Sender already voted!"  );
 
     int256 voteSum = 0;
 
@@ -170,8 +170,8 @@ contract Diplomacy is AccessControl {
     }
   }
 
-  function setElectionAdminRole(address adr) internal {
-    _setupRole(ELECTION_ADMIN_ROLE, adr);
+  function setElectionAdminRole(address _adr) internal {
+    _setupRole(ELECTION_ADMIN_ROLE, _adr);
   }
 
   // // Getters
@@ -193,10 +193,14 @@ contract Diplomacy is AccessControl {
     votes = elections[electionId].votes;
 	}
 
-  // function getElectionResults(uint electionId, address _for) public view returns (int256) {
-  //   require( !(elections[electionId].active), "Active election!" );
-  //   return elections[electionId].results[_for];
-  // }
+  function getElectionScore(uint electionId, address _adr) public view returns (int256){
+    return elections[electionId].scores[_adr];
+  }
+
+  function getElectionResults(uint electionId, address _adr) public view returns (int256) {
+    // require( !(elections[electionId].active), "Active election!" );
+    return elections[electionId].results[_adr];
+  }
 
   // function getElectionScore(uint electionId, address _for) public view returns (int256) {
   //   require( !(elections[electionId].active), "Active election!" );
