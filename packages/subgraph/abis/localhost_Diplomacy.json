@@ -145,5 +145,12 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sayHello",
+    "outputs": [],
+    "stateMutability": "view",
+    "type": "function"
   }
 ]

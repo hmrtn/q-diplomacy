@@ -16,9 +16,11 @@ import {
   Form,
   Checkbox,
   Select,
+  Space,
 } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import { Address, Balance } from "../components";
 
 import { useEventListener } from "../hooks";
@@ -46,6 +48,8 @@ export default function Elections({
   const [isCreating, setIsCreating] = useState(false);
 
   const [form] = Form.useForm();
+
+  const route_history = useHistory();
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -79,6 +83,11 @@ export default function Elections({
     setNewElecAddr(addrs);
   }
 
+  function viewElection(record) {
+    route_history.push("/voting/" + record.key);
+    // console.log("record ", record);
+  }
+
   const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
 
   const columns = [
@@ -101,6 +110,17 @@ export default function Elections({
       title: "# Voted",
       dataIndex: "n_voted",
       key: "n_voted",
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (text, record, index) => (
+        <Space size="middle">
+          <Button type="primary" size="small" onClick={() => viewElection(record)}>
+            View
+          </Button>
+        </Space>
+      ),
     },
   ];
   useEffect(() => {
@@ -142,6 +162,7 @@ export default function Elections({
     let data = [];
     for (let i = 0; i < numElections; i++) {
       const election = await readContracts.Diplomacy.getElectionById(i);
+      console.log("election ", election);
       const name = election.name;
       const n_addr = election.n_addr.toNumber();
       const created_date = new Date(election.createdAt.toNumber() * 1000).toString();
