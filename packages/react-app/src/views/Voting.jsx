@@ -35,6 +35,7 @@ export default function Voting({
   const [votesList, setVotesList] = useState([]);
   const [tableDataSrc, setTableDataSrc] = useState([]);
   const [elecName, setElecName] = useState("");
+  const [totalVotes, setTotalVotes] = useState(0);
   const [remainTokens, setRemainTokens] = useState(0);
 
   const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
@@ -121,7 +122,8 @@ export default function Voting({
   const init = async () => {
     const election = await readContracts.Diplomacy.getElectionById(id);
     setElecName(election.name);
-    const electionCandidates = election.candidates;//await readContracts.Diplomacy.getElectionCandidates(id);
+    setTotalVotes(election.votes.toNumber());
+    const electionCandidates = election.candidates; //await readContracts.Diplomacy.getElectionCandidates(id);
     setRemainTokens(election.votes.toNumber());
     console.log("electionCandidates ", electionCandidates);
     let reverseWorkerMapping = reverseMapping(worker_mapping);
@@ -140,7 +142,10 @@ export default function Voting({
     const votes = [];
     for (let i = 0; i < tableDataSrc.length; i++) {
       addrs.push(tableDataSrc[i].address);
-      votes.push(tableDataSrc[i].n_votes);
+      let percent_votes = (tableDataSrc[i].n_votes / totalVotes) * 100;
+      percent_votes = Math.floor(percent_votes);
+      console.log("percent_votes ", percent_votes);
+      votes.push(percent_votes);
     }
     const result = tx(writeContracts.Diplomacy.castBallot(id, addrs, votes), update => {
       console.log("📡 Transaction Update:", update);

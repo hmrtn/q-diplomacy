@@ -75,7 +75,7 @@ export default function Elections({
     varun: "0x2546BcD3c84621e976D8185a91A922aE77ECEc30",
     ryan: "0xdD2FD4581271e230360230F9337D5c0430Bf44C0",
     bob: "0x6b88d83B4c7C5D0d6C7b503B82d54771A91E6f8f",
-    deployer: "0x1708cE4768724F2C469B8613D2C05462581ED789",
+    deployer: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
   };
 
   function handleAddrSelected(value) {
@@ -97,30 +97,28 @@ export default function Elections({
   //   console.log("ended election " + record.key);
   //   writeContracts.Diplomacy.endElection(record.key);
   // }
-  const endElection = async (record) => {
-    const result = tx(
-      writeContracts.Diplomacy.endElection(record.key),
-      update => {
-        console.log("📡 Transaction Update:", update);
-        if (update && (update.status === "confirmed" || update.status === 1)) {
-          console.log(" 🍾 Transaction " + update.hash + " finished!");
-          // console.log(
-          //   " ⛽️ " +
-          //     update.gasUsed +
-          //     "/" +
-          //     (update.gasLimit || update.gas) +
-          //     " @ " +
-          //     parseFloat(update.gasPrice) / 1000000000 +
-          //     " gwei",
-          // );
-        }
-      },
-    );
+  const endElection = async record => {
+    const result = tx(writeContracts.Diplomacy.endElection(record.key), update => {
+      console.log("📡 Transaction Update:", update);
+      if (update && (update.status === "confirmed" || update.status === 1)) {
+        console.log(" 🍾 Transaction " + update.hash + " finished!");
+        // console.log(
+        //   " ⛽️ " +
+        //     update.gasUsed +
+        //     "/" +
+        //     (update.gasLimit || update.gas) +
+        //     " @ " +
+        //     parseFloat(update.gasPrice) / 1000000000 +
+        //     " gwei",
+        // );
+      }
+    });
     console.log("awaiting metamask/web3 confirm result...", result);
     console.log(await result);
   };
 
   const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
+  const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
 
   const columns = [
     {
@@ -179,6 +177,15 @@ export default function Elections({
       }
     }
   }, [electionCreatedEvent]);
+
+  useEffect(() => {
+    if (readContracts) {
+      if (readContracts.Diplomacy) {
+        console.log("ballot cast event");
+        updateView();
+      }
+    }
+  }, [ballotCastEvent]);
 
   const init = async () => {
     console.log("contract loaded ", readContracts.Diplomacy);
@@ -265,7 +272,11 @@ export default function Elections({
               }}
             />
           </Form.Item>
-          <Form.Item name="votes" label="N Votes" rules={[{ required: true, message: "Please input number of votes!" }]}>
+          <Form.Item
+            name="votes"
+            label="N Votes"
+            rules={[{ required: true, message: "Please input number of votes!" }]}
+          >
             <Input
               placeholder="Number of Votes per Candidate"
               onChange={e => {
