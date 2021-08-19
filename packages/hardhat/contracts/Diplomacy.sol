@@ -3,21 +3,16 @@ pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/access/Ownable.sol"; //https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol
+import "@openzeppelin/contracts/access/Ownable.sol"; 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "prb-math/contracts/PRBMathSD59x18.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol"; //https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol
+import "@openzeppelin/contracts/utils/math/SafeMath.sol"; 
 
 contract Diplomacy is AccessControl {
 
   using PRBMathSD59x18 for int256;
   using SafeMath for uint; 
   
-//   struct Ballot {
-//     uint256 castAt;                         // Ballot cast block-timestamp
-//     int256[] votes;                         // Designated votes
-//   }
-
   struct Election {
     string name;                            // Creator title/names/etc
     bool active;                            // Election status
@@ -25,10 +20,10 @@ contract Diplomacy is AccessControl {
     address[] candidates;                   // Candidates (who can vote/be voted)
     uint256 funds;
     int256 votes;
+    address creator;
     mapping (address => bool) voted;        // Voter status
     mapping (address => int256) scores;     // Voter to active-election score (sum of root votes)
     mapping (address => int256) results;    // Voter to closed-election result (score ** 2)
-    // mapping (address => Ballot) ballots;    // Voter to cast ballot
   }
   
   constructor() {
@@ -38,6 +33,7 @@ contract Diplomacy is AccessControl {
   event BallotCast(address voter, uint electionId, address[] adrs, int256[] votes);
   event ElectionCreated(address creator, uint electionId);
   event ElectionEnded(uint electionId);
+  event ElectionPaid(uint electionId);
 
   bytes32 internal constant ELECTION_ADMIN_ROLE = keccak256("ELECTION_CREATOR_ROLE");
   bytes32 internal constant ELECTION_CANDIDATE_ROLE = keccak256("ELECTION_CANDIDATE_ROLE");
@@ -78,6 +74,7 @@ contract Diplomacy is AccessControl {
     election.candidates = _adrs;
     election.createdAt = block.timestamp;
     election.active = true;
+	election.creator = msg.sender;
     
     // Setup roles
     setElectionCandidateRoles(_adrs);
@@ -96,11 +93,6 @@ contract Diplomacy is AccessControl {
     Election storage election = elections[electionId];
     _checkVote(election, _adrs, _votes); 
 
-    // election.ballots[msg.sender] = Ballot({
-    //   castAt: block.timestamp, 
-    //   votes: _votes
-    // }); 
-
     for ( uint i = 0; i < _adrs.length; i++ ) {
       election.scores[_adrs[i]] += _votes[i]; //PRBMathSD59x18.sqrt(_votes[i]);
     }
@@ -117,10 +109,10 @@ contract Diplomacy is AccessControl {
 
     require( election.active, "Election Already Ended!" );
 
-    for ( uint i = 0; i < election.candidates.length; i++ ) {
-      address candidate = election.candidates[i];
-      election.results[candidate] = PRBMathSD59x18.pow(election.scores[candidate], 2);
-    }
+    // for ( uint i = 0; i < election.candidates.length; i++ ) {
+    //   address candidate = election.candidates[i];
+    //   election.results[candidate] = PRBMathSD59x18.pow(election.scores[candidate], 2);
+    // }
     
     election.active = false;
 
@@ -128,12 +120,25 @@ contract Diplomacy is AccessControl {
 
   }
 
-  // function _deposit() public payable {
-    
-  // }
+  function payoutElection(uint electionId, address[] memory _adrs, uint[] memory _pay) public payable {
 
-  function _payout(uint electionId, address[] memory _adrs, uint[] memory _pay) internal {
-    
+    require( !elections[electionId].active, "Election Still Active!" );
+
+    uint paySum;
+    for ( uint i = 0; i < elections[electionId].candidates.length; i++ ) {
+      require( elections[electionId].candidates[i] == _adrs[i], "Election-Address Mismatch!" );
+      paySum += _pay[i]; 
+    }
+
+    // require( paySum == elections[electionId].funds,  "Payout-Election Funds Mismatch!" ); 
+    require( paySum <= msg.sender.balance, "Sender does not have enough funds!" );    
+    // require( msg.value == elections[electionId].funds, "Sender Payout-Funds Mismatch!" ); 
+
+    for ( uint i = 0; i < _pay.length; i++ ) {//elections[electionId].candidates.length; i++ ) {
+      payable(_adrs[i]).transfer(_pay[i] * 1 wei);
+    }
+
+    emit ElectionPaid(electionId);
   }
 
   
@@ -174,23 +179,25 @@ contract Diplomacy is AccessControl {
     _setupRole(ELECTION_ADMIN_ROLE, adr);
   }
 
-  // // Getters
-
-
+  // Getters
 	function getElectionById(uint electionId) public view returns (
       string memory name, 
       address[] memory candidates,
       uint n_addr, 
       uint createdAt,
       uint256 funds,
-      int256 votes
+      int256 votes, 
+      address creator,
+	  bool isActive
   ) {
-		  name = elections[electionId].name;
+		name = elections[electionId].name;
     	candidates = elections[electionId].candidates;
-		  n_addr = elections[electionId].candidates.length;
+		n_addr = elections[electionId].candidates.length;
     	createdAt = elections[electionId].createdAt;
     	funds = elections[electionId].funds;
     	votes = elections[electionId].votes;
+      	creator = elections[electionId].creator;
+		isActive = elections[electionId].active;
 	}
 
   function getElectionScore(uint electionId, address _adr) public view returns (int256){
@@ -203,7 +210,7 @@ contract Diplomacy is AccessControl {
   }
 
   function getElectionVoted(uint electionId) public view returns(uint count) {
-    for (uint i = 0; i < elections[electionId].candidates.length; i++) {
+    for ( uint i = 0; i < elections[electionId].candidates.length; i++ ) {
       address candidate = elections[electionId].candidates[i];
       if ( elections[electionId].voted[candidate] ) {
         count++;
@@ -220,168 +227,12 @@ contract Diplomacy is AccessControl {
     }
   }
 
-  // function getElectionScore(uint electionId, address _for) public view returns (int256) {
-  //   require( !(elections[electionId].active), "Active election!" );
-  //   return elections[electionId].scores[_for]; 
-  // }
+  function isElectionAdmin(uint electionId, address _sender) public view returns (bool) {
+    return _sender == elections[electionId].creator;
+  }
 
-//   function getElectionCastBallotVotes(uint electionId, address _for) public returns (int256[] memory) { 
-//     require( !(elections[electionId].active), "Active election!");
-//     return elections[electionId].ballots[_for].votes;
-//   }
- 
-  
-  // function getElectionVotedStatus(uint electionId, address _for) public view returns (bool) {
-  //   return elections[electionId].voted[_for];
-  // }
-
-  // function getElectionVotedCount(uint electionId) public view returns (uint) {
-  //   uint count = 0;
-  //   for ( uint i = 0; i < elections[electionId].candidates.length; i++ ) {
-  //     if ( elections[electionId].voted[elections[electionId].candidates[i]] == true ) { 
-  //       count++; 
-  //     }
-  //   }
-  //   return count;
-  // }
+  function hasVoted(uint electionId, address _sender) public view returns (bool) {
+    return elections[electionId].voted[_sender];
+  }
 
 }
-// pragma solidity ^0.8.0; 
-
-// import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-// import "@openzeppelin/contracts/access/AccessControl.sol";
-// import "hardhat/console.sol";
-
-// contract Diplomacy {
-
-//     using SafeMath for uint;
-
-//     // struct Ballot {
-//     //     bool cast;
-//     //     uint castAt;
-//     // }
-
-//     struct Election {
-//         uint fund;
-//         string name; 
-//         bool active;
-//         uint createdAt;
-//         address[] candidates;
-//         // mapping (address => Ballot) ballots;
-//         mapping (address => uint) scores;
-//         mapping (address => bool) voted;       
-//         uint totalScoresSum;
-//     }
-
-//     mapping (uint => Election) elections; 
-
-//     uint public numElections;
-
-//     event ElectionCreated(address _sender, uint _electionId);
-//     event BallotCast(address _sender, uint electionId, address[] adrs, uint[] votes);
-//     event ElectionEnded(address _sender, uint _electionId);
-    
-//     function newElection(
-//         string memory _name, 
-//         uint _fund,
-//         address[] memory _candidates
-//     ) public returns (uint electionId) {
-        
-//         electionId = numElections += 1; 
-//         Election storage election = elections[electionId];
-
-//         election.fund = _fund;
-//         election.name = _name; 
-//         election.candidates = _candidates; 
-//         election.active = true;
-//         election.createdAt = block.timestamp;
-
-//         emit ElectionCreated(msg.sender, electionId);
-
-//     }
-
-//     function castBallot(
-//         uint electionId,
-//         address[] memory _adrs, 
-//         uint[] memory _votes
-//     ) public { 
-
-//         Election storage election = elections[electionId];
-
-//         // Ballot storage ballot = election.ballots[msg.sender];
-
-//         for ( uint i = 0; i < election.candidates.length; i++ ) {
-//             election.scores[_adrs[i]] += sqrt(_votes[i]);
-//             election.voted[_adrs[i]] = true;
-//         }
-        
-//         // ballot.castAt = block.timestamp; 
-//         // ballot.cast = true; 
-
-//         emit BallotCast(msg.sender, electionId, _adrs, _votes);
-
-//     }
-
-//     function endElection(uint electionId) public {
-
-//         Election storage election = elections[electionId];
-
-//         //
-
-//         // for ( uint i = 0; i < election.candidates.length; i++ ) {
-//         //     address candidate = election.candidates[i];
-//         //     election.resul[candidate] = election.score[candidate] * election.score[candidate];
-//         // }
-        
-//         //_payout(electionId);
-
-//         // uint totalScoresSum;
-
-//         for ( uint i = 0; i < election.candidates.length; i++ ) {
-//             address candidate = election.candidates[i];
-
-//         }
-        
-//         election.active = false; 
-
-//         emit ElectionEnded(msg.sender, electionId);
-
-//     }
-
-//     function _payout(uint electionId) internal {
-
-//         // TODO: Fix this.
-//         Election storage election = elections[electionId]; 
-        
-//         uint total; 
-//         for ( uint i = 0; i < election.candidates.length; i++) {
-//             // total += election.result[election.candidates[i]];
-//         }
-
-//         //mapping (address => uint) storage payRatio; 
-//         for ( uint i = 0; i < election.candidates.length; i++ ) {
-            
-//         }
-
-//         console.log(total);
-
-//     }
-
-//     // Helpers
-//     function sqrt(uint x) internal pure returns (uint y) {
-
-//         uint z = (x + 1) / 2;
-//         y = x;
-//         while (z < y) {
-//             y = z;
-//             z = (x / z + z) / 2;
-//         }
-
-//     }
-
-
-// 	// function _deposit() public payable {
-    
-//   	// }
-
-// }

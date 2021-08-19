@@ -13,55 +13,6 @@
               "type": "constructor"
             },
             {
-              "inputs": [
-                {
-                  "internalType": "int256",
-                  "name": "x",
-                  "type": "int256"
-                }
-              ],
-              "name": "PRBMathSD59x18__Exp2InputTooBig",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "int256",
-                  "name": "x",
-                  "type": "int256"
-                }
-              ],
-              "name": "PRBMathSD59x18__LogInputTooSmall",
-              "type": "error"
-            },
-            {
-              "inputs": [],
-              "name": "PRBMathSD59x18__MulInputTooSmall",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "rAbs",
-                  "type": "uint256"
-                }
-              ],
-              "name": "PRBMathSD59x18__MulOverflow",
-              "type": "error"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "uint256",
-                  "name": "prod1",
-                  "type": "uint256"
-                }
-              ],
-              "name": "PRBMath__MulDivFixedPointOverflow",
-              "type": "error"
-            },
-            {
               "anonymous": false,
               "inputs": [
                 {
@@ -122,6 +73,19 @@
                 }
               ],
               "name": "ElectionEnded",
+              "type": "event"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                }
+              ],
+              "name": "ElectionPaid",
               "type": "event"
             },
             {
@@ -293,6 +257,11 @@
                   "internalType": "int256",
                   "name": "votes",
                   "type": "int256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "creator",
+                  "type": "address"
                 }
               ],
               "stateMutability": "view",
@@ -350,6 +319,16 @@
                   "internalType": "int256",
                   "name": "votes",
                   "type": "int256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "creator",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "isActive",
+                  "type": "bool"
                 }
               ],
               "stateMutability": "view",
@@ -486,6 +465,54 @@
             {
               "inputs": [
                 {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "_sender",
+                  "type": "address"
+                }
+              ],
+              "name": "hasVoted",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "_sender",
+                  "type": "address"
+                }
+              ],
+              "name": "isElectionAdmin",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
                   "internalType": "string",
                   "name": "_name",
                   "type": "string"
@@ -528,6 +555,29 @@
                 }
               ],
               "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "electionId",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address[]",
+                  "name": "_adrs",
+                  "type": "address[]"
+                },
+                {
+                  "internalType": "uint256[]",
+                  "name": "_pay",
+                  "type": "uint256[]"
+                }
+              ],
+              "name": "payoutElection",
+              "outputs": [],
+              "stateMutability": "payable",
               "type": "function"
             },
             {
