@@ -5,7 +5,7 @@
       "chainId": "31337",
       "contracts": {
         "Diplomacy": {
-          "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+          "address": "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
           "abi": [
             {
               "inputs": [],
@@ -260,7 +260,7 @@
                 },
                 {
                   "internalType": "address",
-                  "name": "creator",
+                  "name": "admin",
                   "type": "address"
                 }
               ],
@@ -322,7 +322,7 @@
                 },
                 {
                   "internalType": "address",
-                  "name": "creator",
+                  "name": "admin",
                   "type": "address"
                 },
                 {
@@ -612,19 +612,6 @@
                 }
               ],
               "name": "revokeRole",
-              "outputs": [],
-              "stateMutability": "nonpayable",
-              "type": "function"
-            },
-            {
-              "inputs": [
-                {
-                  "internalType": "address",
-                  "name": "adr",
-                  "type": "address"
-                }
-              ],
-              "name": "setElectionAdminRole",
               "outputs": [],
               "stateMutability": "nonpayable",
               "type": "function"

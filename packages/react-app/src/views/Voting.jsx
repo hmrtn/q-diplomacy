@@ -171,7 +171,7 @@ export default function Voting({
 
   const updateView = async () => {
     const election = await readContracts.Diplomacy.getElectionById(id);
-    const isCreator = election.creator == address;
+    const isCreator = election.admin == address;
     setCanEndElection(isCreator);
     setIsElectionActive(election.isActive);
     const funds = election.funds;

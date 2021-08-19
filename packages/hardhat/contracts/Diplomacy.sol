@@ -20,7 +20,7 @@ contract Diplomacy is AccessControl {
     address[] candidates;                   // Candidates (who can vote/be voted)
     uint256 funds;
     int256 votes;
-    address creator;
+    address admin;
     mapping (address => bool) voted;        // Voter status
     mapping (address => int256) scores;     // Voter to active-election score (sum of root votes)
     mapping (address => int256) results;    // Voter to closed-election result (score ** 2)
@@ -35,22 +35,54 @@ contract Diplomacy is AccessControl {
   event ElectionEnded(uint electionId);
   event ElectionPaid(uint electionId);
 
-  bytes32 internal constant ELECTION_ADMIN_ROLE = keccak256("ELECTION_CREATOR_ROLE");
+  bytes32 internal constant ELECTION_ADMIN_ROLE = keccak256("ELECTION_ADMIN_ROLE");
   bytes32 internal constant ELECTION_CANDIDATE_ROLE = keccak256("ELECTION_CANDIDATE_ROLE");
 
   modifier onlyContractAdmin() {
+
     require( hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Sender not Contract Admin!" );
+    _;
+
+  }
+
+  modifier onlyElectionCandidate(uint electionId) {
+
+    require( hasRole(ELECTION_CANDIDATE_ROLE, msg.sender), "Sender not Election Candidate!" );
+    bool isElectionCandidate;
+    for (uint i = 0; i < elections[electionId].candidates.length; i++ ) {
+      if ( msg.sender == elections[electionId].candidates[i] ) {
+        isElectionCandidate = true; 
+      }
+    }
+    require( isElectionCandidate, "Sender not Election Candidate!"); 
+    _;
+
+  }
+  
+  modifier onlyElectionAdmin(uint electionId) {
+    require( hasRole(ELECTION_ADMIN_ROLE, msg.sender), "Sender not Election Admin!" );
+    require( msg.sender == elections[electionId].admin, "Sender not Election Admin!" ); 
     _;
   }
 
-  modifier onlyElectionCandidate() {
-    require( hasRole(ELECTION_CANDIDATE_ROLE, msg.sender), "Sender not Election Candidate!" );
+  modifier validElectionVote(
+    uint electionId, 
+    address[] memory _adrs, 
+    int256[] memory _votes
+  ) {
+
+    require( elections[electionId].active, "Election Not Active!" );
+    require( _adrs.length == _votes.length, "Address-Vote Mismatch!" );
+    require( !elections[electionId].voted[msg.sender], "Sender already voted!" );
+    int256 voteSum = 0;
+    for (uint i = 0; i < _adrs.length; i++) {
+      require( _adrs[i] == elections[electionId].candidates[i], "Address-Candidate Mismatch!" );
+      require( _votes[i] >= 0, "Invalid Vote! Vote(s) < 0" );
+      voteSum += _votes[i];
+    }
+    require( voteSum == elections[electionId].votes, "Vote Miscount!" );
     _;
-  }
-  
-  modifier onlyElectionAdmin() {
-    require( hasRole(ELECTION_ADMIN_ROLE, msg.sender), "Sender not Election Admin!" );
-    _;
+
   }
 
   uint public numElections;
@@ -63,9 +95,6 @@ contract Diplomacy is AccessControl {
     address[] memory _adrs
   ) public returns (uint electionId) {
     
-    // NOTE: This does not check for future funds balance! (If multiple elections)
-    // require( _funds <= address(this).balance,     "Not enough balance!" );
-
     electionId = numElections++; 
     Election storage election = elections[electionId];
     election.name = _name;
@@ -74,7 +103,7 @@ contract Diplomacy is AccessControl {
     election.candidates = _adrs;
     election.createdAt = block.timestamp;
     election.active = true;
-	election.creator = msg.sender;
+    election.admin = msg.sender;
     
     // Setup roles
     setElectionCandidateRoles(_adrs);
@@ -88,10 +117,10 @@ contract Diplomacy is AccessControl {
     uint electionId, 
     address[] memory _adrs, 
     int256[] memory _votes
-  ) public onlyElectionCandidate {
+  ) public onlyElectionCandidate(electionId) 
+           validElectionVote(electionId, _adrs, _votes) {
 
     Election storage election = elections[electionId];
-    _checkVote(election, _adrs, _votes); 
 
     for ( uint i = 0; i < _adrs.length; i++ ) {
       election.scores[_adrs[i]] += _votes[i]; //PRBMathSD59x18.sqrt(_votes[i]);
@@ -103,7 +132,9 @@ contract Diplomacy is AccessControl {
 
   }
   
-  function endElection(uint electionId) public onlyElectionAdmin {
+  function endElection(
+    uint electionId
+  ) public onlyElectionAdmin(electionId) {
 
     Election storage election = elections[electionId];
 
@@ -120,7 +151,11 @@ contract Diplomacy is AccessControl {
 
   }
 
-  function payoutElection(uint electionId, address[] memory _adrs, uint[] memory _pay) public payable {
+  function payoutElection(
+    uint electionId, 
+    address[] memory _adrs, 
+    uint[] memory _pay
+  ) public payable onlyElectionAdmin(electionId) {
 
     require( !elections[electionId].active, "Election Still Active!" );
 
@@ -141,33 +176,6 @@ contract Diplomacy is AccessControl {
     emit ElectionPaid(electionId);
   }
 
-  
-  // Check
-  function _checkVote(
-    Election storage election, 
-    address[] memory _adrs, 
-    int256[] memory _votes
-  ) internal view {
-
-    require( election.active,                      "Election Not Active!"   );
-    require( _adrs.length == _votes.length,        "Address-Vote Mismatch!" );
-    require( !election.voted[msg.sender],          "Sender already voted!"  );
-
-    int256 voteSum = 0;
-
-    for (uint i = 0; i < _adrs.length; i++) {
-
-      require( _adrs[i] == election.candidates[i], "Address-Candidate Mismatch!" );
-      require( _votes[i] >= 0,                     "Invalid Vote! Vote(s) < 0"   );
-      
-      voteSum += _votes[i];
-
-    }
-
-    require( voteSum == election.votes, "Vote Miscount!" );
-
-  }
-
   // Setters
   function setElectionCandidateRoles(address[] memory _adrs) internal {
     for ( uint i = 0; i < _adrs.length; i++ ) { 
@@ -175,7 +183,7 @@ contract Diplomacy is AccessControl {
     }
   }
 
-  function setElectionAdminRole(address adr) public {
+  function setElectionAdminRole(address adr) internal {
     _setupRole(ELECTION_ADMIN_ROLE, adr);
   }
 
@@ -187,16 +195,17 @@ contract Diplomacy is AccessControl {
       uint createdAt,
       uint256 funds,
       int256 votes, 
-      address creator,
+      address admin,
 	  bool isActive
   ) {
+
 		name = elections[electionId].name;
     	candidates = elections[electionId].candidates;
 		n_addr = elections[electionId].candidates.length;
     	createdAt = elections[electionId].createdAt;
     	funds = elections[electionId].funds;
     	votes = elections[electionId].votes;
-      	creator = elections[electionId].creator;
+      	admin = elections[electionId].admin;
 		isActive = elections[electionId].active;
 	}
 
@@ -228,7 +237,7 @@ contract Diplomacy is AccessControl {
   }
 
   function isElectionAdmin(uint electionId, address _sender) public view returns (bool) {
-    return _sender == elections[electionId].creator;
+    return _sender == elections[electionId].admin;
   }
 
   function hasVoted(uint electionId, address _sender) public view returns (bool) {

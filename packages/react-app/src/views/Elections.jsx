@@ -247,8 +247,8 @@ export default function Elections({
       const n_voted = (await readContracts.Diplomacy.getElectionVoted(i)).toNumber();
       let created_date = new Date(election.createdAt.toNumber() * 1000);
       created_date = created_date.toISOString().substring(0, 10);
-      let creator = election.creator;
-      console.log("creator ", creator, reverseWorkerMapping[creator]);
+      let creator = election.admin;
+      //   console.log("creator ", creator, reverseWorkerMapping[creator]);
       if (reverseWorkerMapping[creator]) {
         creator = reverseWorkerMapping[creator];
       } else {
