@@ -191,17 +191,18 @@ contract Diplomacy is AccessControl {
       uint createdAt,
       uint256 funds,
       int256 votes, 
-      address admin
+      address admin,
+	  bool isActive
   ) {
 
-		  name = elections[electionId].name;
+		name = elections[electionId].name;
     	candidates = elections[electionId].candidates;
-		  n_addr = elections[electionId].candidates.length;
+		n_addr = elections[electionId].candidates.length;
     	createdAt = elections[electionId].createdAt;
     	funds = elections[electionId].funds;
     	votes = elections[electionId].votes;
-      admin = elections[electionId].admin;
-
+      	admin = elections[electionId].admin;
+		isActive = elections[electionId].active;
 	}
 
   function getElectionScore(uint electionId, address _adr) public view returns (int256){
@@ -242,6 +243,10 @@ contract Diplomacy is AccessControl {
         break; 
       }
     }
+  }
+
+  function hasVoted(uint electionId, address _sender) public view returns (bool) {
+    return elections[electionId].voted[_sender];
   }
 
 }

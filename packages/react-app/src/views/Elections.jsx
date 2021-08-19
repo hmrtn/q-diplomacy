@@ -18,6 +18,7 @@ import {
   Checkbox,
   Select,
   Space,
+  Tag,
 } from "antd";
 import { UserOutlined, LockOutlined, SyncOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
@@ -68,6 +69,13 @@ export default function Elections({
 
   //   , , "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
   //   "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65"
+  function reverseMapping(obj) {
+    var ret = {};
+    for (var key in obj) {
+      ret[obj[key]] = key;
+    }
+    return ret;
+  }
   const worker_mapping = {
     swapp: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
     hans: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
@@ -122,6 +130,7 @@ export default function Elections({
   };
 
   const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
+  const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
 
   const columns = [
     {
@@ -133,6 +142,35 @@ export default function Elections({
       title: "Name",
       dataIndex: "name",
       key: "name",
+    },
+    {
+      title: "Creator",
+      dataIndex: "creator",
+      key: "creator",
+    },
+    {
+      title: "Roles",
+      dataIndex: "roles",
+      key: "roles",
+      render: roles => (
+        <>
+          {roles.map(r => {
+            //   let color = tag.length > 5 ? 'geekblue' : 'green';
+            //   if (tag === 'loser') {
+            //     color = 'volcano';
+            //   }
+            let color = "geekblue";
+            if (r == "candidate") {
+              color = "green";
+            }
+            return (
+              <Tag color={color} key={r}>
+                {r.toLowerCase()}
+              </Tag>
+            );
+          })}
+        </>
+      ),
     },
     {
       title: "# Workers",
@@ -184,8 +222,17 @@ export default function Elections({
     }
   }, [electionCreatedEvent]);
 
+  useEffect(() => {
+    if (readContracts) {
+      if (readContracts.Diplomacy) {
+        console.log("ballot cast event");
+        updateView();
+      }
+    }
+  }, [ballotCastEvent]);
+
   const init = async () => {
-    console.log("contract loaded ", readContracts.Diplomacy);
+    console.log("contract loaded ", address);
 
     let workers = [];
     for (let i = 0; i < Object.keys(worker_mapping).length; i++) {
@@ -198,18 +245,43 @@ export default function Elections({
 
   const updateView = async () => {
     const numElections = (await readContracts.Diplomacy.numElections()).toNumber();
-    console.log("numElections ", numElections);
+    // console.log("numElections ", numElections);
     setNumElections(numElections);
     let data = [];
+    let reverseWorkerMapping = reverseMapping(worker_mapping);
     for (let i = 0; i < numElections; i++) {
       const election = await readContracts.Diplomacy.getElectionById(i);
-      console.log("election ", election);
+      //   console.log("election ", election);
       const name = election.name;
       const n_addr = election.n_addr.toNumber();
       const n_voted = (await readContracts.Diplomacy.getElectionVoted(i)).toNumber();
       let created_date = new Date(election.createdAt.toNumber() * 1000);
       created_date = created_date.toISOString().substring(0, 10);
-      data.push({ key: i, created_date: created_date, name: name, n_workers: n_addr, n_voted: n_voted });
+      let creator = election.admin;
+      //   console.log("creator ", creator, reverseWorkerMapping[creator]);
+      if (reverseWorkerMapping[creator]) {
+        creator = reverseWorkerMapping[creator];
+      } else {
+        creator = creator.substring(0, 6);
+      }
+      let roles = [];
+      const isCreator = election.creator == address;
+      if (isCreator) {
+        roles.push("creator");
+      }
+      const isCandidate = await readContracts.Diplomacy.canVote(i, address);
+      if (isCandidate) {
+        roles.push("candidate");
+      }
+      data.push({
+        key: i,
+        created_date: created_date,
+        name: name,
+        n_workers: n_addr,
+        n_voted: n_voted,
+        creator: creator,
+        roles: roles,
+      });
     }
     setTableDataSrc(data);
   };
@@ -227,20 +299,14 @@ export default function Elections({
         console.log("📡 Transaction Update:", update);
         if (update && (update.status === "confirmed" || update.status === 1)) {
           console.log(" 🍾 Transaction " + update.hash + " finished!");
-          // console.log(
-          //   " ⛽️ " +
-          //     update.gasUsed +
-          //     "/" +
-          //     (update.gasLimit || update.gas) +
-          //     " @ " +
-          //     parseFloat(update.gasPrice) / 1000000000 +
-          //     " gwei",
-          // );
+        } else {
+          console.log("update error ", update.status);
+          setIsCreating(false);
         }
       },
     );
-    console.log("awaiting metamask/web3 confirm result...", result);
-    console.log(await result);
+    // console.log("awaiting metamask/web3 confirm result...", result);
+    // console.log(await result);
   };
 
   return (
@@ -269,7 +335,11 @@ export default function Elections({
               }}
             />
           </Form.Item>
-          <Form.Item name="votes" label="N Votes" rules={[{ required: true, message: "Please input number of votes!" }]}>
+          <Form.Item
+            name="votes"
+            label="N Votes"
+            rules={[{ required: true, message: "Please input number of votes!" }]}
+          >
             <Input
               placeholder="Number of Votes per Candidate"
               onChange={e => {
