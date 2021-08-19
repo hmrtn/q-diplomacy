@@ -1,4 +1,4 @@
-import { SyncOutlined } from "@ant-design/icons";
+import { PageHeader } from "antd";
 import { utils } from "ethers";
 import { toWei } from "web3-utils";
 import {
@@ -19,7 +19,7 @@ import {
   Select,
   Space,
 } from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
+import { UserOutlined, LockOutlined, SyncOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { Address, Balance } from "../components";
@@ -93,10 +93,6 @@ export default function Elections({
     // console.log("record ", record);
   }
 
-  // function endElection(record) {
-  //   console.log("ended election " + record.key);
-  //   writeContracts.Diplomacy.endElection(record.key);
-  // }
   const endElection = async (record) => {
     const result = tx(
       writeContracts.Diplomacy.endElection(record.key),
@@ -104,20 +100,25 @@ export default function Elections({
         console.log("📡 Transaction Update:", update);
         if (update && (update.status === "confirmed" || update.status === 1)) {
           console.log(" 🍾 Transaction " + update.hash + " finished!");
-          // console.log(
-          //   " ⛽️ " +
-          //     update.gasUsed +
-          //     "/" +
-          //     (update.gasLimit || update.gas) +
-          //     " @ " +
-          //     parseFloat(update.gasPrice) / 1000000000 +
-          //     " gwei",
-          // );
         }
       },
     );
     console.log("awaiting metamask/web3 confirm result...", result);
     console.log(await result);
+  };
+
+  const payoutElection = async (record) => {
+    // const result = tx(
+    //   writeContracts.Diplomacy.paypoutElection(record.key),
+    //   update => {
+    //     console.log("📡 Transaction Update:", update);
+    //     if (update && (update.status === "confirmed" || update.status === 1)) {
+    //       console.log(" 🍾 Transaction " + update.hash + " finished!");
+    //     }
+    //   },
+    // );
+    // console.log("awaiting metamask/web3 confirm result...", result);
+    // console.log(await result);
   };
 
   const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
@@ -153,7 +154,10 @@ export default function Elections({
               View
             </Button>
             <Button type="primary" size="small" onClick={() => endElection(record)}>
-              End & Payout
+              End
+            </Button>
+            <Button type="primary" size="small" onClick={() => payoutElection(record)}>
+              Payout
             </Button>
           </Space>
         </>
@@ -299,13 +303,21 @@ export default function Elections({
         </Form>
       </Modal>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
-        <h2>Elections</h2>
-        <div>Number of elections: {numElections}</div>
-        <Divider />
-        <Button style={{ margin: 4 }} onClick={() => createNewElection()}>
-          Create New Election
-        </Button>
-        <Table dataSource={tableDataSrc} columns={columns} />
+        <PageHeader
+          ghost={false}
+          title="Elections"
+          subTitle={`Count: ${numElections}`}
+          extra={[
+          <Button style={{ margin: 4 }} onClick={() => createNewElection()}>
+            + Create Election
+          </Button>
+          ]}
+        >
+          {/* <h2>Elections</h2>
+          <div>Number of elections: {numElections}</div> */}
+          <Divider />
+          <Table dataSource={tableDataSrc} columns={columns} />
+        </PageHeader>
       </div>
     </>
   );

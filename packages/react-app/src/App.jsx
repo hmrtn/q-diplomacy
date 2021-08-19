@@ -389,16 +389,6 @@ function App(props) {
               Diplomacy Contract
             </Link>
           </Menu.Item>
-          {/* <Menu.Item key="/hints">
-            <Link
-              onClick={() => {
-                setRoute("/hints");
-              }}
-              to="/hints"
-            >
-              Hints
-            </Link>
-          </Menu.Item> */}
           <Menu.Item key="/elections">
             <Link
               onClick={() => {
@@ -409,26 +399,6 @@ function App(props) {
               Elections
             </Link>
           </Menu.Item>
-          {/* <Menu.Item key="/mainnetdai">
-            <Link
-              onClick={() => {
-                setRoute("/mainnetdai");
-              }}
-              to="/mainnetdai"
-            >
-              Mainnet DAI
-            </Link>
-          </Menu.Item> */}
-          {/* <Menu.Item key="/subgraph">
-            <Link
-              onClick={() => {
-                setRoute("/subgraph");
-              }}
-              to="/subgraph"
-            >
-              Subgraph
-            </Link>
-          </Menu.Item> */}
         </Menu>
 
         <Switch>
@@ -460,14 +430,6 @@ function App(props) {
               readContracts={readContracts}
             />
           </Route>
-          <Route path="/hints">
-            <Hints
-              address={address}
-              yourLocalBalance={yourLocalBalance}
-              mainnetProvider={mainnetProvider}
-              price={price}
-            />
-          </Route>
           <Route path="/elections">
             <Elections
               address={address}
@@ -481,34 +443,19 @@ function App(props) {
               readContracts={readContracts}
             />
           </Route>
-          <Route path="/mainnetdai">
-            <Contract
-              name="DAI"
-              customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.DAI}
-              signer={userSigner}
-              provider={mainnetProvider}
+          {/* <Route path="/create">
+            <CreateElection
               address={address}
-              blockExplorer="https://etherscan.io/"
-            />
-            {/*
-            <Contract
-              name="UNI"
-              customContract={mainnetContracts && mainnetContracts.contracts && mainnetContracts.contracts.UNI}
-              signer={userSigner}
-              provider={mainnetProvider}
-              address={address}
-              blockExplorer="https://etherscan.io/"
-            />
-            */}
-          </Route>
-          <Route path="/subgraph">
-            <Subgraph
-              subgraphUri={props.subgraphUri}
+              userSigner={userSigner}
+              mainnetProvider={mainnetProvider}
+              localProvider={localProvider}
+              yourLocalBalance={yourLocalBalance}
+              price={price}
               tx={tx}
               writeContracts={writeContracts}
-              mainnetProvider={mainnetProvider}
+              readContracts={readContracts}
             />
-          </Route>
+          </Route> */}
         </Switch>
       </BrowserRouter>
 

@@ -1,3 +1,4 @@
+import { PageHeader } from "antd";
 import { useParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import {
@@ -155,15 +156,28 @@ export default function Voting({
   return (
     <>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
-        <h2>Cast your votes for Election: {elecName}</h2>
-        <h3>Votes remaining: {remainTokens}</h3>
-        <Divider />
-        <Table dataSource={tableDataSrc} columns={columns} />
-        <Divider />
-        <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
-          Cast Votes
-        </Button>
-        {/* <List
+        <PageHeader
+          ghost={false}
+          onBack={() => window.history.back()}
+          title={elecName}
+          subTitle="Election"
+          extra={[
+            <Button key="3">Operation</Button>,
+            <Button key="2">Operation</Button>,
+            <Button key="1" type="primary">
+              Primary
+            </Button>,
+          ]}
+        >
+          {/* <h2>Cast your votes for Election: {elecName}</h2> */}
+          <h3 style={{fontWeight: "bold"}}>Votes remaining: {remainTokens}</h3>
+          <Divider />
+          <Table dataSource={tableDataSrc} columns={columns} />
+          <Divider />
+          <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
+            Cast Votes
+          </Button>
+          {/* <List
           header={<div>Header</div>}
           footer={
             <Button type="primary" size="small" onClick={() => castVotes()}>
@@ -178,6 +192,7 @@ export default function Voting({
             </List.Item>
           )}
         /> */}
+        </PageHeader>
       </div>
     </>
   );

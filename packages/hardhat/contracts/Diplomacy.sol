@@ -48,21 +48,17 @@ contract Diplomacy is AccessControl {
   modifier onlyElectionCandidate(uint electionId) {
 
     require( hasRole(ELECTION_CANDIDATE_ROLE, msg.sender), "Sender not Election Candidate!" );
-    bool isElectionCandidate;
-    for (uint i = 0; i < elections[electionId].candidates.length; i++ ) {
-      if ( msg.sender == elections[electionId].candidates[i] ) {
-        isElectionCandidate = true; 
-      }
-    }
-    require( isElectionCandidate, "Sender not Election Candidate!"); 
+    require( isElectionCandidate(electionId, msg.sender), "Sender not Election Candidate!"); 
     _;
 
   }
   
   modifier onlyElectionAdmin(uint electionId) {
+
     require( hasRole(ELECTION_ADMIN_ROLE, msg.sender), "Sender not Election Admin!" );
     require( msg.sender == elections[electionId].admin, "Sender not Election Admin!" ); 
     _;
+    
   }
 
   modifier validElectionVote(
@@ -237,6 +233,15 @@ contract Diplomacy is AccessControl {
 
   function isElectionAdmin(uint electionId, address _sender) public view returns (bool) {
     return _sender == elections[electionId].admin;
+  }
+
+  function isElectionCandidate(uint electionId, address _sender) public view returns(bool status) {
+    for (uint i = 0; i < elections[electionId].candidates.length; i++ ) {
+      if ( _sender == elections[electionId].candidates[i] ) {
+        status = true; 
+        break; 
+      }
+    }
   }
 
 }
