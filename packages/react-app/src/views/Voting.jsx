@@ -250,9 +250,9 @@ export default function Voting({
     const votes = [];
     for (let i = 0; i < tableDataSrc.length; i++) {
       addrs.push(tableDataSrc[i].address);
-      let percent_votes = (tableDataSrc[i].n_votes / totalVotes) * 100;
-      percent_votes = Math.floor(percent_votes);
-      console.log("percent_votes ", percent_votes);
+      // let percent_votes = (tableDataSrc[i].n_votes / totalVotes) * 100;
+      // percent_votes = Math.floor(percent_votes);
+      // console.log("percent_votes ", percent_votes);
       votes.push(tableDataSrc[i].n_votes);
     }
     const result = tx(writeContracts.Diplomacy.castBallot(id, addrs, votes), update => {

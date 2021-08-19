@@ -22,7 +22,8 @@ contract Diplomacy is AccessControl {
     int256 votes;
     address admin;
     mapping (address => bool) voted;        // Voter status
-    mapping (address => int256) scores;     // Voter to active-election score (sum of root votes)
+    // mapping (address => int256) scores;     // Voter to active-election score (sum of root votes)
+    mapping (address => string[]) scores;
     mapping (address => int256) results;    // Voter to closed-election result (score ** 2)
   }
   
@@ -30,7 +31,7 @@ contract Diplomacy is AccessControl {
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
 
-  event BallotCast(address voter, uint electionId, address[] adrs, int256[] votes);
+  event BallotCast(address voter, uint electionId, address[] adrs, string[] votes);
   event ElectionCreated(address creator, uint electionId);
   event ElectionEnded(uint electionId);
   event ElectionPaid(uint electionId);
@@ -112,14 +113,14 @@ contract Diplomacy is AccessControl {
   function castBallot(
     uint electionId, 
     address[] memory _adrs, 
-    int256[] memory _votes
-  ) public onlyElectionCandidate(electionId) 
-           validElectionVote(electionId, _adrs, _votes) {
+    string[] memory _votes // sqrt of votes
+  ) public onlyElectionCandidate(electionId) {
+          //  validElectionVote(electionId, _adrs, _votes) {
 
     Election storage election = elections[electionId];
 
     for ( uint i = 0; i < _adrs.length; i++ ) {
-      election.scores[_adrs[i]] += _votes[i]; //PRBMathSD59x18.sqrt(_votes[i]);
+      election.scores[_adrs[i]].push(_votes[i]); //PRBMathSD59x18.sqrt(_votes[i]);
     }
 
     election.voted[msg.sender] = true;
@@ -195,17 +196,18 @@ contract Diplomacy is AccessControl {
 	  bool isActive
   ) {
 
-		name = elections[electionId].name;
+		  name = elections[electionId].name;
     	candidates = elections[electionId].candidates;
-		n_addr = elections[electionId].candidates.length;
+		  n_addr = elections[electionId].candidates.length;
     	createdAt = elections[electionId].createdAt;
     	funds = elections[electionId].funds;
     	votes = elections[electionId].votes;
-      	admin = elections[electionId].admin;
-		isActive = elections[electionId].active;
+      admin = elections[electionId].admin;
+		  isActive = elections[electionId].active;
+
 	}
 
-  function getElectionScore(uint electionId, address _adr) public view returns (int256){
+  function getElectionScores(uint electionId, address _adr) public view returns (string[] memory){
     return elections[electionId].scores[_adr];
   }
 

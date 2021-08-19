@@ -145,8 +145,8 @@ export default function Elections({
     },
     {
       title: "Creator",
-      dataIndex: "creator",
-      key: "creator",
+      dataIndex: "admin",
+      key: "admin",
     },
     {
       title: "Roles",
@@ -257,17 +257,17 @@ export default function Elections({
       const n_voted = (await readContracts.Diplomacy.getElectionVoted(i)).toNumber();
       let created_date = new Date(election.createdAt.toNumber() * 1000);
       created_date = created_date.toISOString().substring(0, 10);
-      let creator = election.admin;
-      //   console.log("creator ", creator, reverseWorkerMapping[creator]);
-      if (reverseWorkerMapping[creator]) {
-        creator = reverseWorkerMapping[creator];
+      let admin = election.admin;
+      //   console.log("admin ", admin, reverseWorkerMapping[admin]);
+      if (reverseWorkerMapping[admin]) {
+        admin = reverseWorkerMapping[admin];
       } else {
-        creator = creator.substring(0, 6);
+        admin = admin.substring(0, 6);
       }
       let roles = [];
-      const isCreator = election.creator == address;
+      const isCreator = election.admin == address;
       if (isCreator) {
-        roles.push("creator");
+        roles.push("admin");
       }
       const isCandidate = await readContracts.Diplomacy.canVote(i, address);
       if (isCandidate) {
@@ -279,7 +279,7 @@ export default function Elections({
         name: name,
         n_workers: n_addr,
         n_voted: n_voted,
-        creator: creator,
+        admin: admin,
         roles: roles,
       });
     }

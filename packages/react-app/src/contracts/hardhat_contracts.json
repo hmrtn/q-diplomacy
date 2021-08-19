@@ -5,7 +5,7 @@
       "chainId": "31337",
       "contracts": {
         "Diplomacy": {
-          "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+          "address": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
           "abi": [
             {
               "inputs": [],
@@ -35,9 +35,9 @@
                 },
                 {
                   "indexed": false,
-                  "internalType": "int256[]",
+                  "internalType": "string[]",
                   "name": "votes",
-                  "type": "int256[]"
+                  "type": "string[]"
                 }
               ],
               "name": "BallotCast",
@@ -213,9 +213,9 @@
                   "type": "address[]"
                 },
                 {
-                  "internalType": "int256[]",
+                  "internalType": "string[]",
                   "name": "_votes",
-                  "type": "int256[]"
+                  "type": "string[]"
                 }
               ],
               "name": "castBallot",
@@ -371,12 +371,12 @@
                   "type": "address"
                 }
               ],
-              "name": "getElectionScore",
+              "name": "getElectionScores",
               "outputs": [
                 {
-                  "internalType": "int256",
+                  "internalType": "string[]",
                   "name": "",
-                  "type": "int256"
+                  "type": "string[]"
                 }
               ],
               "stateMutability": "view",
