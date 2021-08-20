@@ -21,6 +21,9 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   */
 
   const Diplomacy = await ethers.getContract("Diplomacy", deployer);
+  await Diplomacy.transferOwnership(
+    "0x76c48E1F02774C40372a3497620D946136136172"
+  );
 
   // await Diplomacy._deposit({
   //   value: ethers.utils.parseEther("1"),
