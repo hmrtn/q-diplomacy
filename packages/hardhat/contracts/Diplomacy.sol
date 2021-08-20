@@ -66,14 +66,14 @@ contract Diplomacy is AccessControl {
     }
 
     modifier onlyElectionAdmin(uint256 electionId) {
-        // require(
-        //     hasRole(ELECTION_ADMIN_ROLE, msg.sender),
-        //     "Sender not Election Admin!"
-        // );
-        // require(
-        //     msg.sender == elections[electionId].admin,
-        //     "Sender not Election Admin!"
-        // );
+        require(
+            hasRole(ELECTION_ADMIN_ROLE, msg.sender),
+            "Sender not Election Admin!"
+        );
+        require(
+            msg.sender == elections[electionId].admin,
+            "Sender not Election Admin!"
+        );
         _;
     }
 
@@ -161,10 +161,6 @@ contract Diplomacy is AccessControl {
         election.active = false;
 
         emit ElectionEnded(electionId);
-    }
-
-    function testDeposit() public payable { 
-
     }
 
     function payoutElection(

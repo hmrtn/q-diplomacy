@@ -45,8 +45,8 @@ export default function Voting({
   const [canEndElection, setCanEndElection] = useState(false);
   const [isElectionActive, setIsElectionActive] = useState(false);
 
-  const [electionWeiToPay, setElectionWeiToPay] = useState([]);
-  const [electionAddressToPay, setElectionAddressToPay] = useState([]);
+  const [electionWeisToPay, setElectionWeisToPay] = useState([]);
+  const [electionAddressesToPay, setElectionAddressesToPay] = useState([]);
 
   const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
   const electionEndedEvent = useEventListener(readContracts, "Diplomacy", "ElectionEnded", localProvider, 1);
@@ -225,8 +225,7 @@ export default function Voting({
       const name = reverseWorkerMapping[electionCandidates[i]];
       const addr = electionCandidates[i];
       const scores = await readContracts.Diplomacy.getElectionScores(id, addr);
-      // let scoresSum = scores.reduce((a, b) => {a + b});
-      //   console.log(scores);
+      let scoresSum = scores.length > 0 ? scores.map(Number).reduce((a, b) => {return a + b}).toFixed(4) : "0";
       let tempTotalVotes = election.votes.toNumber();
       let weiToPay = 0;
       if (tempTotalVotes != 0) {
@@ -237,8 +236,10 @@ export default function Voting({
         // weiToPay = toWei((currScorePercent * Number(totalEth)).toString());
         // electionAddressToPay.push(addr);
         // electionWeiToPay.push(weiToPay);
+        console.log({electionWeisToPay})
+        weiToPay = electionWeisToPay.length > 0 ? electionWeisToPay[i].toString() : toWei("0", "ether"); 
       }
-      data.push({ key: i, name: name, address: addr, n_votes: 0, score: scores, payout: weiToPay });
+      data.push({ key: i, name: name, address: addr, n_votes: 0, score: scoresSum, payout: weiToPay });
     }
     setTableDataSrc(data);
   };
@@ -276,6 +277,7 @@ export default function Voting({
 
     //   votes.push(tableDataSrc[i].n_votes);
     // }
+
     const result = tx(writeContracts.Diplomacy.castBallot(id, adrs, votes), update => {
       console.log("📡 Transaction Update:", update);
       if (update && (update.status === "confirmed" || update.status === 1)) {
@@ -284,23 +286,14 @@ export default function Voting({
     });
     console.log("awaiting metamask/web3 confirm result...", result);
     console.log(await result);
+    // updateView();
   };
 
   const endElection = async () => {
-    console.log("endElection");
-    const result = tx(writeContracts.Diplomacy.endElection(id), update => {
-      console.log("📡 Transaction Update:", update);
-      if (update && (update.status === "confirmed" || update.status === 1)) {
-        console.log(" 🍾 Transaction " + update.hash + " finished!");
-      }
-    });
-    console.log("awaiting metamask/web3 confirm result...", result);
-  };
 
-  const payoutTokens = async () => {
-    console.log("payoutTokens");
-    // console.log(electionWeiToPay)
-    // console.log(electionAddressToPay)
+
+
+    /////////////
 
     const election = await readContracts.Diplomacy.getElectionById(id);
     console.log({ election });
@@ -344,8 +337,73 @@ export default function Voting({
       });
     console.log({ electionWeiToPay });
     console.log({ electionAdrToPay})
-    console.log(readContracts.Diplomacy)
-    tx(writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay, {value: election.funds}));
+
+    setElectionAddressesToPay(electionAdrToPay);
+    setElectionWeisToPay(electionWeiToPay)
+
+    /////////////
+
+
+    
+    console.log("endElection");
+    const result = tx(writeContracts.Diplomacy.endElection(id), update => {
+      console.log("📡 Transaction Update:", update);
+      if (update && (update.status === "confirmed" || update.status === 1)) {
+        console.log(" 🍾 Transaction " + update.hash + " finished!");
+      }
+    });
+    console.log("awaiting metamask/web3 confirm result...", result);
+  };
+
+  const payoutTokens = async () => {
+    console.log("payoutTokens");
+    // // console.log(electionWeiToPay)
+    // // console.log(electionAddressToPay)
+
+    const election = await readContracts.Diplomacy.getElectionById(id);
+    // console.log({ election });
+
+    // let totalScoreSumSqr = 0;
+
+    // const payoutInfo = [];
+
+    // for (let i = 0; i < election.candidates.length; i++) {
+    //   // Get scores arr for each candidate
+    //   let scores = await readContracts.Diplomacy.getElectionScores(id, election.candidates[i]);
+    //   let scoresSumSqr = Math.pow(
+    //     scores.map(Number).reduce((a, b) => {
+    //       return a + b;
+    //     }),
+    //     2,
+    //   ); //reduce((a, b) => {Number(a) + Number(b)});
+    //   totalScoreSumSqr += scoresSumSqr;
+    //   payoutInfo.push({ address: election.candidates[i], scoresSumSqr: scoresSumSqr });
+    // }
+
+    // console.log({ payoutInfo });
+    // const payoutRatio = [];
+    // for (let i = 0; i < payoutInfo.length; i++) {
+    //   payoutRatio.push({ address: payoutInfo[i].address, ratio: payoutInfo[i].scoresSumSqr / totalScoreSumSqr });
+    // }
+    // console.log({ payoutRatio });
+    // const ethFunds = fromWei(election.funds.toString(), "ether");
+    // let electionAdrToPay = payoutRatio.map(d => {
+    //   return d.address;
+    // });
+    // let electionWeiToPay = payoutRatio
+    //   .map(d => {
+    //     return d.ratio;
+    //   })
+    //   .map(c => {
+    //     return c * Number(ethFunds);
+    //   })
+    //   .map(b => {
+    //     return toWei(b.toFixed(18));
+    //   });
+    // console.log({ electionWeiToPay });
+    // console.log({ electionAdrToPay})
+    // console.log(readContracts.Diplomacy)
+    tx(writeContracts.Diplomacy.payoutElection(id, electionAddressesToPay, electionWeisToPay, {value: election.funds}));
   };
 
   return (
