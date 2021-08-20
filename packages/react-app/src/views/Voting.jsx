@@ -408,7 +408,7 @@ export default function Voting({
 
   return (
     <>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
+      <div className="voting-view" style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
         <PageHeader
           ghost={false}
           onBack={() => window.history.back()}

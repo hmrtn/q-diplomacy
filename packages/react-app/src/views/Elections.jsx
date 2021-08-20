@@ -405,7 +405,7 @@ export default function Elections({
           </Form.Item>
         </Form>
       </Modal>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
+      <div className="elections-view" style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
         <PageHeader
           ghost={false}
           title="Elections"
