@@ -154,6 +154,10 @@ export default function Voting({
   }, [readContracts]);
 
   useEffect(() => {
+    console.log("ballotCastEvent ", ballotCastEvent);
+    if (ballotCastEvent && ballotCastEvent.length == 0) {
+      return;
+    }
     if (readContracts) {
       if (readContracts.Diplomacy) {
         console.log("ballot cast event");
@@ -163,6 +167,9 @@ export default function Voting({
   }, [ballotCastEvent]);
 
   useEffect(() => {
+    if (electionEndedEvent && electionEndedEvent.length == 0) {
+      return;
+    }
     if (readContracts) {
       if (readContracts.Diplomacy) {
         console.log("Election ended event");
@@ -173,21 +180,23 @@ export default function Voting({
   }, [electionEndedEvent]);
 
   useEffect(() => {
+    if (electionPayoutEvent && electionPayoutEvent.length == 0) {
+      return;
+    }
     if (readContracts) {
       if (readContracts.Diplomacy) {
         // Stuff
         updateView();
       }
     }
-  }, [electionPayoutEvent])
-
+  }, [electionPayoutEvent]);
 
   const init = async () => {
     updateView();
     // updatePayoutDistribution();
   };
 
-  // 
+  //
 
   const updateView = async () => {
     const election = await readContracts.Diplomacy.getElectionById(id);
@@ -215,15 +224,15 @@ export default function Voting({
     for (let i = 0; i < electionCandidates.length; i++) {
       const name = reverseWorkerMapping[electionCandidates[i]];
       const addr = electionCandidates[i];
-      const scores = (await readContracts.Diplomacy.getElectionScores(id, addr));
-      // let scoresSum = scores.reduce((a, b) => {a + b}); 
-      console.log(scores);
+      const scores = await readContracts.Diplomacy.getElectionScores(id, addr);
+      // let scoresSum = scores.reduce((a, b) => {a + b});
+      //   console.log(scores);
       let tempTotalVotes = election.votes.toNumber();
       let weiToPay = 0;
       if (tempTotalVotes != 0) {
         // const currScorePercent = (scores[0] / tempTotalVotes);
         // Hmmm....
-        // NOTE: We need to update the election Wei and Addrs states 
+        // NOTE: We need to update the election Wei and Addrs states
         // somewhere to use elsewhere (like payout), but not here..
         // weiToPay = toWei((currScorePercent * Number(totalEth)).toString());
         // electionAddressToPay.push(addr);
@@ -250,12 +259,12 @@ export default function Voting({
     console.log("castVotes");
     const election = await readContracts.Diplomacy.getElectionById(id);
     const adrs = election.candidates; // hmm...
-    console.log(adrs)
+    console.log(adrs);
     const votes = [];
-    for (let i = 0; i < tableDataSrc.length; i++ ) {
+    for (let i = 0; i < tableDataSrc.length; i++) {
       votes.push(Math.sqrt(tableDataSrc[i].n_votes).toString());
     }
-    console.log(votes)
+    console.log(votes);
     // const addrs = [];
     // const votes = [];
     // for (let i = 0; i < tableDataSrc.length; i++) {
@@ -294,62 +303,50 @@ export default function Voting({
     // console.log(electionAddressToPay)
 
     const election = await readContracts.Diplomacy.getElectionById(id);
-    console.log({election})
-    
-    let totalScoreSumSqr = 0; 
+    console.log({ election });
+
+    let totalScoreSumSqr = 0;
 
     const payoutInfo = [];
 
     for (let i = 0; i < election.candidates.length; i++) {
       // Get scores arr for each candidate
       let scores = await readContracts.Diplomacy.getElectionScores(id, election.candidates[i]);
-      let scoresSumSqr = Math.pow(scores.map(Number).reduce((a, b) => {return a + b}), 2);//reduce((a, b) => {Number(a) + Number(b)});
+      let scoresSumSqr = Math.pow(
+        scores.map(Number).reduce((a, b) => {
+          return a + b;
+        }),
+        2,
+      ); //reduce((a, b) => {Number(a) + Number(b)});
       totalScoreSumSqr += scoresSumSqr;
-      payoutInfo.push({address: election.candidates[i], scoresSumSqr: scoresSumSqr});
+      payoutInfo.push({ address: election.candidates[i], scoresSumSqr: scoresSumSqr });
     }
-    
-    console.log({payoutInfo})
+
+    console.log({ payoutInfo });
     const payoutRatio = [];
     for (let i = 0; i < payoutInfo.length; i++) {
-      payoutRatio.push({address: payoutInfo[i].address, ratio: payoutInfo[i].scoresSumSqr / totalScoreSumSqr});
+      payoutRatio.push({ address: payoutInfo[i].address, ratio: payoutInfo[i].scoresSumSqr / totalScoreSumSqr });
     }
-    console.log({payoutRatio})
-     const ethFunds = fromWei(election.funds.toString(), "ether");
-    let electionAdrToPay = payoutRatio.map(d => {return d.address});
-    let electionWeiToPay = payoutRatio.map(d => {return d.ratio})
-                                      .map(c => {return c * Number(ethFunds)})
-                                      .map(b => {return toWei(b.toFixed(18))});
-    console.log({electionWeiToPay})
-    console.log({electionAdrToPay})
-    tx({
-      to: writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay), 
-      value: election.funds,
-    })
-
-
-    // tx(
-      // writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay)
-      // update => {
-      // console.log("📡 Transaction Update:", update);
-      // if (update && (update.status === "confirmed" || update.status === 1)) {
-      //   console.log(" 🍾 Transaction " + update.hash + " finished!");
-      // }
-      // });
-    // tx({
-    //   to: writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay),
-    //   value: election.funds,
-    // })
-    // tx({
-    //   to: writeContracts.Diplomacy.payoutElection(id, electionAddressToPay, electionWeiToPay),
-    //   value: toWei((electionWeiToPay.reduce((a, b) => a + b, 0)).toString())
-    // })
-    //   const result = tx(writeContracts.Diplomacy.payoutElection(id, electionAddressToPay, electionWeiToPay), update => {
-    //     console.log("📡 Transaction Update:", update);
-    //     if (update && (update.status === "confirmed" || update.status === 1)) {
-    //       console.log(" 🍾 Transaction " + update.hash + " finished!");
-    //     }
-    //   });
-    //   console.log("awaiting metamask/web3 confirm result...", result);
+    console.log({ payoutRatio });
+    const ethFunds = fromWei(election.funds.toString(), "ether");
+    let electionAdrToPay = payoutRatio.map(d => {
+      return d.address;
+    });
+    let electionWeiToPay = payoutRatio
+      .map(d => {
+        return d.ratio;
+      })
+      .map(c => {
+        return c * Number(ethFunds);
+      })
+      .map(b => {
+        return toWei(b.toFixed(18));
+      });
+    console.log({ electionWeiToPay });
+    console.log({ electionAdrToPay})
+    console.log(readContracts.Diplomacy)
+    // DOES NOT WORK!
+    tx(writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay), toWei("0.1", "ether"))
   };
 
   return (
@@ -387,13 +384,13 @@ export default function Voting({
           {isElectionActive && !alreadyVoted && <Table dataSource={tableDataSrc} columns={voting_columns} />}
           {(alreadyVoted || !isElectionActive) && <Table dataSource={tableDataSrc} columns={voted_columns} />}
           <Divider />
-          {isElectionActive && !alreadyVoted && (
+          {/* {isElectionActive && !alreadyVoted && (
             <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
               Vote
             </Button>
-          )}
-          {alreadyVoted && <span>Votes Received! Thanks!</span>}
-          <Divider />
+          )} */}
+          {/* {alreadyVoted && <span>Votes Received! Thanks!</span>} */}
+          {/* <Divider />
           {canEndElection && isElectionActive && (
             <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => endElection()}>
               End
@@ -403,7 +400,7 @@ export default function Voting({
             <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => payoutTokens()}>
               Payout
             </Button>
-          )}
+          )} */}
         </PageHeader>
       </div>
     </>
