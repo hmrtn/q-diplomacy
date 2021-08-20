@@ -163,6 +163,10 @@ contract Diplomacy is AccessControl {
         emit ElectionEnded(electionId);
     }
 
+    function testDeposit() public payable { 
+
+    }
+
     function payoutElection(
         uint256 electionId,
         address[] memory _adrs,

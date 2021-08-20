@@ -345,8 +345,7 @@ export default function Voting({
     console.log({ electionWeiToPay });
     console.log({ electionAdrToPay})
     console.log(readContracts.Diplomacy)
-    // DOES NOT WORK!
-    tx(writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay), toWei("0.1", "ether"))
+    tx(writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay, {value: election.funds}));
   };
 
   return (
