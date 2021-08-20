@@ -26,6 +26,7 @@ import { useHistory } from "react-router-dom";
 import { Address, Balance } from "../components";
 
 import { useEventListener } from "../hooks";
+import AddressInput from "../components/AddressInput";
 
 const { Option } = Select;
 
@@ -44,6 +45,7 @@ export default function Elections({
   const [newElecName, setNewElecName] = useState("");
   const [newElecAllocatedVotes, setNewElecAllocatedVotes] = useState(10);
   const [newElecAllocatedFunds, setNewElecAllocatedFunds] = useState(1);
+  const [customAddress, setCustomAddress] = useState("");
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -96,26 +98,30 @@ export default function Elections({
     setNewElecAddr(addrs);
   }
 
+  function addCustomAddr() {
+    if (customAddress != "") {
+      setNewElecAddr([...newElecAddr, customAddress]);
+      setCustomAddress("");
+    }
+  }
+
   function viewElection(record) {
     route_history.push("/voting/" + record.key);
     // console.log("record ", record);
   }
 
-  const endElection = async (record) => {
-    const result = tx(
-      writeContracts.Diplomacy.endElection(record.key),
-      update => {
-        console.log("📡 Transaction Update:", update);
-        if (update && (update.status === "confirmed" || update.status === 1)) {
-          console.log(" 🍾 Transaction " + update.hash + " finished!");
-        }
-      },
-    );
+  const endElection = async record => {
+    const result = tx(writeContracts.Diplomacy.endElection(record.key), update => {
+      console.log("📡 Transaction Update:", update);
+      if (update && (update.status === "confirmed" || update.status === 1)) {
+        console.log(" 🍾 Transaction " + update.hash + " finished!");
+      }
+    });
     console.log("awaiting metamask/web3 confirm result...", result);
     console.log(await result);
   };
 
-  const payoutElection = async (record) => {
+  const payoutElection = async record => {
     // const result = tx(
     //   writeContracts.Diplomacy.paypoutElection(record.key),
     //   update => {
@@ -205,24 +211,35 @@ export default function Elections({
   useEffect(() => {
     if (readContracts) {
       if (readContracts.Diplomacy) {
+        console.log("readContracts");
         init();
       }
     }
   }, [readContracts]);
 
-  useEffect(() => {
+  useEffect(async () => {
+    if (electionCreatedEvent && electionCreatedEvent.length == 0) {
+      return;
+    }
     if (readContracts) {
       if (readContracts.Diplomacy) {
-        updateView();
-        setIsCreating(false);
-        setNewElecAddr([]);
-        setNewElecName("");
-        form.resetFields();
+        const numElectionsNew = (await readContracts.Diplomacy.numElections()).toNumber();
+        if (numElectionsNew > numElections) {
+          //   console.log("electionCreatedEvent ", electionCreatedEvent);
+          updateView();
+          setIsCreating(false);
+          setNewElecAddr([]);
+          setNewElecName("");
+          form.resetFields();
+        }
       }
     }
   }, [electionCreatedEvent]);
 
   useEffect(() => {
+    if (ballotCastEvent && ballotCastEvent.length == 0) {
+      return;
+    }
     if (readContracts) {
       if (readContracts.Diplomacy) {
         console.log("ballot cast event");
@@ -243,8 +260,8 @@ export default function Elections({
     updateView();
   };
 
-
   const updateView = async () => {
+    console.log("updateView ");
     const numElections = (await readContracts.Diplomacy.numElections()).toNumber();
     // console.log("numElections ", numElections);
     setNumElections(numElections);
@@ -252,7 +269,6 @@ export default function Elections({
     let reverseWorkerMapping = reverseMapping(worker_mapping);
     let elections = [];
     for (let i = 0; i < numElections; i++) {
-      
       const election = await readContracts.Diplomacy.getElectionById(i);
       //   console.log("election ", election);
       const name = election.name;
@@ -317,9 +333,10 @@ export default function Elections({
       <Modal title="Election Info" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
         <Form
           form={form}
-          name="normal_login"
-          className="login-form"
-          initialValues={{ remember: true }}
+          name="basic"
+          labelCol={{ span: 6 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={{ remember: false }}
           onFinish={onFinish}
         >
           <Form.Item name="name" label="Name" rules={[{ required: true, message: "Please input election name!" }]}>
@@ -350,16 +367,29 @@ export default function Elections({
               }}
             />
           </Form.Item>
-          <Form.Item label="Select" name="addr">
+          <Form.Item label="Candidates" name="addr">
             <Select
               mode="multiple"
-              allowClear
-              style={{ width: "100%" }}
-              placeholder="Please select"
+              //   style={{ width: "100%" }}
+              placeholder="Add multiple candidates"
               onChange={handleAddrSelected}
             >
               {newElecWorkers}
             </Select>
+          </Form.Item>
+          <Form.Item label="Custom" name="custom">
+            <Space>
+              <Input
+                placeholder="Enter address"
+                value={customAddress}
+                onChange={e => {
+                  setCustomAddress(e.target.value);
+                }}
+              />
+              <Button type="primary" size="small" onClick={() => addCustomAddr()}>
+                +
+              </Button>
+            </Space>
           </Form.Item>
           <Form.Item>
             {!isCreating && (
@@ -381,9 +411,9 @@ export default function Elections({
           title="Elections"
           subTitle={`Count: ${numElections}`}
           extra={[
-          <Button style={{ margin: 4 }} onClick={() => createNewElection()}>
-            + Create Election
-          </Button>
+            <Button style={{ margin: 4 }} onClick={() => createNewElection()}>
+              + Create Election
+            </Button>,
           ]}
         >
           {/* <h2>Elections</h2>
