@@ -243,13 +243,16 @@ export default function Elections({
     updateView();
   };
 
+
   const updateView = async () => {
     const numElections = (await readContracts.Diplomacy.numElections()).toNumber();
     // console.log("numElections ", numElections);
     setNumElections(numElections);
     let data = [];
     let reverseWorkerMapping = reverseMapping(worker_mapping);
+    let elections = [];
     for (let i = 0; i < numElections; i++) {
+      
       const election = await readContracts.Diplomacy.getElectionById(i);
       //   console.log("election ", election);
       const name = election.name;

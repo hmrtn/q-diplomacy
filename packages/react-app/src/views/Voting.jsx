@@ -45,12 +45,12 @@ export default function Voting({
   const [canEndElection, setCanEndElection] = useState(false);
   const [isElectionActive, setIsElectionActive] = useState(false);
 
-  const [electionWeiToPay, setElectionWeiToPay] = useState([]); 
-  const [electionAddressToPay, setElectionAddressToPay] = useState([]); 
+  const [electionWeiToPay, setElectionWeiToPay] = useState([]);
+  const [electionAddressToPay, setElectionAddressToPay] = useState([]);
 
   const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
   const electionEndedEvent = useEventListener(readContracts, "Diplomacy", "ElectionEnded", localProvider, 1);
-  const electionPayoutEvent = useEventListener(readContracts, "Diplomacy", "ElectionPaid", localProvider, 1); 
+  const electionPayoutEvent = useEventListener(readContracts, "Diplomacy", "ElectionPaid", localProvider, 1);
 
   const voting_columns = [
     {
@@ -173,12 +173,12 @@ export default function Voting({
   }, [electionEndedEvent]);
 
   useEffect(() => {
-   if ( readContracts ) {
-     if ( readContracts.Diplomacy ) {
-       // Stuff
-       updateView();
-     }
-   } 
+    if (readContracts) {
+      if (readContracts.Diplomacy) {
+        // Stuff
+        updateView();
+      }
+    }
   }, [electionPayoutEvent])
 
 
@@ -215,19 +215,21 @@ export default function Voting({
     for (let i = 0; i < electionCandidates.length; i++) {
       const name = reverseWorkerMapping[electionCandidates[i]];
       const addr = electionCandidates[i];
-      const score = (await readContracts.Diplomacy.getElectionScore(id, addr)).toNumber();
+      const scores = (await readContracts.Diplomacy.getElectionScores(id, addr));
+      // let scoresSum = scores.reduce((a, b) => {a + b}); 
+      console.log(scores);
       let tempTotalVotes = election.votes.toNumber();
       let weiToPay = 0;
       if (tempTotalVotes != 0) {
-        const currScorePercent = (score / tempTotalVotes);
+        // const currScorePercent = (scores[0] / tempTotalVotes);
         // Hmmm....
         // NOTE: We need to update the election Wei and Addrs states 
         // somewhere to use elsewhere (like payout), but not here..
-        weiToPay = toWei((currScorePercent * Number(totalEth)).toString());
-        electionAddressToPay.push(addr);
-        electionWeiToPay.push(weiToPay);
+        // weiToPay = toWei((currScorePercent * Number(totalEth)).toString());
+        // electionAddressToPay.push(addr);
+        // electionWeiToPay.push(weiToPay);
       }
-      data.push({ key: i, name: name, address: addr, n_votes: 0, score: score, payout: weiToPay });
+      data.push({ key: i, name: name, address: addr, n_votes: 0, score: scores, payout: weiToPay });
     }
     setTableDataSrc(data);
   };
@@ -246,16 +248,26 @@ export default function Voting({
 
   const castVotes = async () => {
     console.log("castVotes");
-    const addrs = [];
+    const election = await readContracts.Diplomacy.getElectionById(id);
+    const adrs = election.candidates; // hmm...
+    console.log(adrs)
     const votes = [];
-    for (let i = 0; i < tableDataSrc.length; i++) {
-      addrs.push(tableDataSrc[i].address);
-      // let percent_votes = (tableDataSrc[i].n_votes / totalVotes) * 100;
-      // percent_votes = Math.floor(percent_votes);
-      // console.log("percent_votes ", percent_votes);
-      votes.push(tableDataSrc[i].n_votes);
+    for (let i = 0; i < tableDataSrc.length; i++ ) {
+      votes.push(Math.sqrt(tableDataSrc[i].n_votes).toString());
     }
-    const result = tx(writeContracts.Diplomacy.castBallot(id, addrs, votes), update => {
+    console.log(votes)
+    // const addrs = [];
+    // const votes = [];
+    // for (let i = 0; i < tableDataSrc.length; i++) {
+    //   addrs.push(tableDataSrc[i].address);
+    //   console.log({addrs})
+    //   // let percent_votes = (tableDataSrc[i].n_votes / totalVotes) * 100;
+    //   // percent_votes = Math.floor(percent_votes);
+    //   // console.log("percent_votes ", percent_votes);
+
+    //   votes.push(tableDataSrc[i].n_votes);
+    // }
+    const result = tx(writeContracts.Diplomacy.castBallot(id, adrs, votes), update => {
       console.log("📡 Transaction Update:", update);
       if (update && (update.status === "confirmed" || update.status === 1)) {
         console.log(" 🍾 Transaction " + update.hash + " finished!");
@@ -278,19 +290,52 @@ export default function Voting({
 
   const payoutTokens = async () => {
     console.log("payoutTokens");
-    console.log(electionWeiToPay)
-    console.log(electionAddressToPay)
-    tx({
-      to: writeContracts.Diplomacy.payoutElection(id, electionAddressToPay, electionWeiToPay), 
-      value: toWei((electionWeiToPay.reduce((a, b) => a + b, 0)).toString())
-    })
-  //   const result = tx(writeContracts.Diplomacy.payoutElection(id, electionAddressToPay, electionWeiToPay), update => {
-  //     console.log("📡 Transaction Update:", update);
-  //     if (update && (update.status === "confirmed" || update.status === 1)) {
-  //       console.log(" 🍾 Transaction " + update.hash + " finished!");
-  //     }
-  //   });
-  //   console.log("awaiting metamask/web3 confirm result...", result);
+    // console.log(electionWeiToPay)
+    // console.log(electionAddressToPay)
+
+    const election = await readContracts.Diplomacy.getElectionById(id);
+    console.log({election})
+    
+    let totalScoreSumSqr = 0; 
+
+    const payoutInfo = [];
+
+    for (let i = 0; i < election.candidates.length; i++) {
+      // Get scores arr for each candidate
+      let scores = await readContracts.Diplomacy.getElectionScores(id, election.candidates[i]);
+      let scoresSumSqr = Math.pow(scores.map(Number).reduce((a, b) => {return a + b}), 2);//reduce((a, b) => {Number(a) + Number(b)});
+      totalScoreSumSqr += scoresSumSqr;
+      payoutInfo.push({address: election.candidates[i], scoresSumSqr: scoresSumSqr});
+    }
+    
+    console.log({payoutInfo})
+    const payoutRatio = [];
+    for (let i = 0; i < payoutInfo.length; i++) {
+      payoutRatio.push({address: payoutInfo[i].address, ratio: payoutInfo[i].scoresSumSqr / totalScoreSumSqr});
+    }
+    console.log({payoutRatio})
+     const ethFunds = fromWei(election.funds.toString(), "ether");
+    let electionAdrToPay = payoutRatio.map(d => {return d.address});
+    let electionWeiToPay = payoutRatio.map(d => {return d.ratio})
+                                      .map(c => {return c * Number(ethFunds)})
+                                      .map(b => {return toWei(b.toFixed(18))});
+    console.log({electionWeiToPay})
+    // tx(writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay));
+    // tx({
+    //   to: await writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay),
+    //   value: election.funds,
+    // })
+    // tx({
+    //   to: writeContracts.Diplomacy.payoutElection(id, electionAddressToPay, electionWeiToPay),
+    //   value: toWei((electionWeiToPay.reduce((a, b) => a + b, 0)).toString())
+    // })
+    //   const result = tx(writeContracts.Diplomacy.payoutElection(id, electionAddressToPay, electionWeiToPay), update => {
+    //     console.log("📡 Transaction Update:", update);
+    //     if (update && (update.status === "confirmed" || update.status === 1)) {
+    //       console.log(" 🍾 Transaction " + update.hash + " finished!");
+    //     }
+    //   });
+    //   console.log("awaiting metamask/web3 confirm result...", result);
   };
 
   return (
@@ -302,54 +347,49 @@ export default function Voting({
           title={elecName}
           subTitle={alreadyVoted && <span>Votes Received! Thanks!</span>}
           extra={[
-            // <Button key="3">Operation</Button>,
-            // <Button key="2">Operation</Button>,
-            // <Button key="1" type="primary">
-            //   Primary
-            // </Button>,
-        canEndElection && isElectionActive && (
-          <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => endElection()}>
-            End
-          </Button>
-        ), 
-        canEndElection && !isElectionActive && (
-          <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => payoutTokens()}>
-            💸 Payout
-          </Button>
-        ),
-         isElectionActive && !alreadyVoted && (
-          <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
-            🗳️ Vote
-          </Button>
-        ), 
+            canEndElection && isElectionActive && (
+              <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => endElection()}>
+                End
+              </Button>
+            ),
+            canEndElection && !isElectionActive && (
+              <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => payoutTokens()}>
+                💸 Payout
+              </Button>
+            ),
+            isElectionActive && !alreadyVoted && (
+              <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
+                🗳️ Vote
+              </Button>
+            ),
           ]}
         >
-        <h2>Cast your votes for Election: {elecName}</h2>
-        <Space split={<Divider type="vertical" />}>
-          <h3>Total funds to distribute: {totalFunds} ETH</h3>
-          <h3>Votes remaining: {remainTokens}</h3>
-        </Space>
-        <Divider />
-        {isElectionActive && !alreadyVoted && <Table dataSource={tableDataSrc} columns={voting_columns} />}
-        {(alreadyVoted || !isElectionActive) && <Table dataSource={tableDataSrc} columns={voted_columns} />}
-        <Divider />
-        {isElectionActive && !alreadyVoted && (
-          <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
-            Vote
-          </Button>
-        )}
-        {alreadyVoted && <span>Votes Received! Thanks!</span>}
-        <Divider />
-        {canEndElection && isElectionActive && (
-          <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => endElection()}>
-            End
-          </Button>
-        )}
-        {canEndElection && !isElectionActive && (
-          <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => payoutTokens()}>
-            Payout
-          </Button>
-        )}
+          <h2>Cast your votes for Election: {elecName}</h2>
+          <Space split={<Divider type="vertical" />}>
+            <h3>Total funds to distribute: {totalFunds} ETH</h3>
+            <h3>Votes remaining: {remainTokens}</h3>
+          </Space>
+          <Divider />
+          {isElectionActive && !alreadyVoted && <Table dataSource={tableDataSrc} columns={voting_columns} />}
+          {(alreadyVoted || !isElectionActive) && <Table dataSource={tableDataSrc} columns={voted_columns} />}
+          <Divider />
+          {isElectionActive && !alreadyVoted && (
+            <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
+              Vote
+            </Button>
+          )}
+          {alreadyVoted && <span>Votes Received! Thanks!</span>}
+          <Divider />
+          {canEndElection && isElectionActive && (
+            <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => endElection()}>
+              End
+            </Button>
+          )}
+          {canEndElection && !isElectionActive && (
+            <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => payoutTokens()}>
+              Payout
+            </Button>
+          )}
         </PageHeader>
       </div>
     </>
