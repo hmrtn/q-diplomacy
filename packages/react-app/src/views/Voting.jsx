@@ -320,9 +320,23 @@ export default function Voting({
                                       .map(c => {return c * Number(ethFunds)})
                                       .map(b => {return toWei(b.toFixed(18))});
     console.log({electionWeiToPay})
-    // tx(writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay));
+    console.log({electionAdrToPay})
+    tx({
+      to: writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay), 
+      value: election.funds,
+    })
+
+
+    // tx(
+      // writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay)
+      // update => {
+      // console.log("📡 Transaction Update:", update);
+      // if (update && (update.status === "confirmed" || update.status === 1)) {
+      //   console.log(" 🍾 Transaction " + update.hash + " finished!");
+      // }
+      // });
     // tx({
-    //   to: await writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay),
+    //   to: writeContracts.Diplomacy.payoutElection(id, electionAdrToPay, electionWeiToPay),
     //   value: election.funds,
     // })
     // tx({
