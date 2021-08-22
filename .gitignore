@@ -28,3 +28,5 @@ yarn-debug.log*
 yarn-error.log*
 packages/hardhat/deployments/localhost/
 packages/react-app/src/contracts/hardhat_contracts.json
+packages/hardhat/deployments/kovan/
+packages/react-app/build/

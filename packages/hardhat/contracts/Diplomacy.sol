@@ -1,14 +1,13 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "prb-math/contracts/PRBMathSD59x18.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Diplomacy is AccessControl {
+contract Diplomacy is AccessControl, Ownable {
     using PRBMathSD59x18 for int256;
     using SafeMath for uint256;
 

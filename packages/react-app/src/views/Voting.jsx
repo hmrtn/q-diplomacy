@@ -20,7 +20,7 @@ import {
   Select,
   Space,
 } from "antd";
-import { useEventListener } from "../hooks";
+import { useEventListener, useOnBlock } from "../hooks";
 import { fromWei, toWei, toBN } from "web3-utils";
 import { BigNumber } from "ethers";
 import { CodeSandboxSquareFilled } from "@ant-design/icons";
@@ -47,6 +47,10 @@ export default function Voting({
 
   const [electionWeisToPay, setElectionWeisToPay] = useState([]);
   const [electionAddressesToPay, setElectionAddressesToPay] = useState([]);
+
+  //   useOnBlock(localProvider, () => {
+  //     console.log(`⛓ A new localProvider block is here: ${localProvider._lastBlockNumber}`);
+  //   });
 
   const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
   const electionEndedEvent = useEventListener(readContracts, "Diplomacy", "ElectionEnded", localProvider, 1);
@@ -122,13 +126,10 @@ export default function Voting({
     return ret;
   }
   const worker_mapping = {
-    swapp: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-    hans: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-    bliss: "0xcd3B766CCDd6AE721141F452C550Ca635964ce71",
-    varun: "0x2546BcD3c84621e976D8185a91A922aE77ECEc30",
-    ryan: "0xdD2FD4581271e230360230F9337D5c0430Bf44C0",
-    bob: "0x6b88d83B4c7C5D0d6C7b503B82d54771A91E6f8f",
-    deployer: "0x1708cE4768724F2C469B8613D2C05462581ED789",
+    acc_1: "0x76c48E1F02774C40372a3497620D946136136172",
+    acc_2: "0x01684C57AE8a4226271068210Ce1cCED865a5AfC",
+    acc_3: "0xf5De4337Ac5332aF11BffbeC45D950bDDBc1493F",
+    acc_4: "0x4E53E14de4e264AC2C3fF501ed3Bd6c4Ad63B9A1",
   };
 
   function minusVote(idx) {
@@ -154,13 +155,12 @@ export default function Voting({
   }, [readContracts]);
 
   useEffect(() => {
-    console.log("ballotCastEvent ", ballotCastEvent);
+    console.log("ballotCastEvent ", ballotCastEvent.length);
     if (ballotCastEvent && ballotCastEvent.length == 0) {
       return;
     }
     if (readContracts) {
       if (readContracts.Diplomacy) {
-        console.log("ballot cast event");
         updateView();
       }
     }
@@ -210,50 +210,39 @@ export default function Voting({
     console.log("setTotalVotes ", election.votes.toNumber());
     setTotalVotes(election.votes.toNumber());
     const hasVoted = await readContracts.Diplomacy.hasVoted(id, address);
-    // console.log("hasVoted ", hasVoted);
     setAlreadyVoted(hasVoted);
-    setRemainTokens(election.votes.toNumber());
+    if (!hasVoted) {
+      setRemainTokens(election.votes.toNumber());
+    }
     const electionCandidates = election.candidates;
     // console.log("electionCandidates ", electionCandidates);
     let data = [];
 
     let reverseWorkerMapping = reverseMapping(worker_mapping);
 
-    let totalEth = fromWei(funds.toString());
-
     for (let i = 0; i < electionCandidates.length; i++) {
       const name = reverseWorkerMapping[electionCandidates[i]];
       const addr = electionCandidates[i];
       const scores = await readContracts.Diplomacy.getElectionScores(id, addr);
-      let scoresSum = scores.length > 0 ? scores.map(Number).reduce((a, b) => {return a + b}).toFixed(4) : "0";
+      let scoresSum =
+        scores.length > 0
+          ? scores
+              .map(Number)
+              .reduce((a, b) => {
+                return a + b;
+              })
+              .toFixed(4)
+          : "0";
       let tempTotalVotes = election.votes.toNumber();
       let weiToPay = 0;
       if (tempTotalVotes != 0) {
-        // const currScorePercent = (scores[0] / tempTotalVotes);
-        // Hmmm....
-        // NOTE: We need to update the election Wei and Addrs states
-        // somewhere to use elsewhere (like payout), but not here..
-        // weiToPay = toWei((currScorePercent * Number(totalEth)).toString());
-        // electionAddressToPay.push(addr);
-        // electionWeiToPay.push(weiToPay);
-        console.log({electionWeisToPay})
-        weiToPay = electionWeisToPay.length > 0 ? electionWeisToPay[i].toString() : toWei("0", "ether"); 
+        weiToPay = electionWeisToPay.length > 0 ? electionWeisToPay[i].toString() : toWei("0", "ether");
       }
       data.push({ key: i, name: name, address: addr, n_votes: 0, score: scoresSum, payout: weiToPay });
     }
     setTableDataSrc(data);
-  };
 
-  const updatePayoutDistribution = async () => {
-    const election = await readContracts.Diplomacy.getElectionById(id);
-    const electionCandidates = election.candidates;
-    let totalWei = toWei(totalFunds.toString());
-    for (let i = 0; i < electionCandidates.length; i++) {
-      const score = (await readContracts.Diplomacy.getElectionScore(id, electionCandidates[i])).toNumber();
-      const currScorePercent = (score / totalVotes) * 100;
-      totalWei = currScorePercent * totalWei;
-      tableDataSrc[i].payout = totalWei;
-    }
+    calculatePayout();
   };
 
   const castVotes = async () => {
@@ -265,18 +254,6 @@ export default function Voting({
     for (let i = 0; i < tableDataSrc.length; i++) {
       votes.push(Math.sqrt(tableDataSrc[i].n_votes).toString());
     }
-    console.log(votes);
-    // const addrs = [];
-    // const votes = [];
-    // for (let i = 0; i < tableDataSrc.length; i++) {
-    //   addrs.push(tableDataSrc[i].address);
-    //   console.log({addrs})
-    //   // let percent_votes = (tableDataSrc[i].n_votes / totalVotes) * 100;
-    //   // percent_votes = Math.floor(percent_votes);
-    //   // console.log("percent_votes ", percent_votes);
-
-    //   votes.push(tableDataSrc[i].n_votes);
-    // }
 
     const result = tx(writeContracts.Diplomacy.castBallot(id, adrs, votes), update => {
       console.log("📡 Transaction Update:", update);
@@ -289,14 +266,9 @@ export default function Voting({
     // updateView();
   };
 
-  const endElection = async () => {
-
-
-
-    /////////////
-
+  const calculatePayout = async () => {
     const election = await readContracts.Diplomacy.getElectionById(id);
-    console.log({ election });
+    // console.log({ election });
 
     let totalScoreSumSqr = 0;
 
@@ -314,13 +286,11 @@ export default function Voting({
       totalScoreSumSqr += scoresSumSqr;
       payoutInfo.push({ address: election.candidates[i], scoresSumSqr: scoresSumSqr });
     }
-
-    console.log({ payoutInfo });
     const payoutRatio = [];
     for (let i = 0; i < payoutInfo.length; i++) {
       payoutRatio.push({ address: payoutInfo[i].address, ratio: payoutInfo[i].scoresSumSqr / totalScoreSumSqr });
     }
-    console.log({ payoutRatio });
+    // console.log({ payoutRatio });
     const ethFunds = fromWei(election.funds.toString(), "ether");
     let electionAdrToPay = payoutRatio.map(d => {
       return d.address;
@@ -335,16 +305,20 @@ export default function Voting({
       .map(b => {
         return toWei(b.toFixed(18));
       });
-    console.log({ electionWeiToPay });
-    console.log({ electionAdrToPay})
+    // console.log("electionWeiToPay ", { electionWeiToPay });
 
     setElectionAddressesToPay(electionAdrToPay);
-    setElectionWeisToPay(electionWeiToPay)
+    setElectionWeisToPay(electionWeiToPay);
 
-    /////////////
+    if (tableDataSrc) {
+      electionWeiToPay.forEach((w, i) => {
+        tableDataSrc[i].payout = w;
+      });
+    }
+  };
 
-
-    
+  const endElection = async () => {
+    calculatePayout();
     console.log("endElection");
     const result = tx(writeContracts.Diplomacy.endElection(id), update => {
       console.log("📡 Transaction Update:", update);
@@ -403,17 +377,21 @@ export default function Voting({
     // console.log({ electionWeiToPay });
     // console.log({ electionAdrToPay})
     // console.log(readContracts.Diplomacy)
-    tx(writeContracts.Diplomacy.payoutElection(id, electionAddressesToPay, electionWeisToPay, {value: election.funds}));
+    tx(
+      writeContracts.Diplomacy.payoutElection(id, electionAddressesToPay, electionWeisToPay, { value: election.funds }),
+    );
   };
 
   return (
     <>
-      <div className="voting-view" style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
+      <div
+        className="voting-view"
+        style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}
+      >
         <PageHeader
           ghost={false}
           onBack={() => window.history.back()}
           title={elecName}
-          subTitle={alreadyVoted && <span>Votes Received! Thanks!</span>}
           extra={[
             canEndElection && isElectionActive && (
               <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => endElection()}>
@@ -446,7 +424,7 @@ export default function Voting({
               Vote
             </Button>
           )} */}
-          {/* {alreadyVoted && <span>Votes Received! Thanks!</span>} */}
+          {alreadyVoted && <h3>Votes Received! Thanks!</h3>}
           {/* <Divider />
           {canEndElection && isElectionActive && (
             <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => endElection()}>
