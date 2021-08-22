@@ -1,32 +1,30 @@
-import { PageHeader } from "antd";
-import { utils } from "ethers";
-import { toWei } from "web3-utils";
+import { PageHeader, Carousel } from "antd";
+import { toWei, fromWei } from "web3-utils";
 import {
   Button,
-  Card,
-  DatePicker,
   Divider,
   Input,
+  InputNumber,
   List,
-  Progress,
-  Slider,
-  Spin,
-  Switch,
   Table,
   Modal,
   Form,
-  Checkbox,
   Select,
   Space,
   Tag,
+  Descriptions, 
 } from "antd";
-import { UserOutlined, LockOutlined, SyncOutlined } from "@ant-design/icons";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import { Address, Balance } from "../components";
 
-import { useEventListener } from "../hooks";
+import { useEventListener, useExchangePrice, } from "../hooks";
 import AddressInput from "../components/AddressInput";
+import EtherInput from "../components/EtherInput";
+
+import { mainnetProvider, blockExplorer } from "../App";
+
+import "../index.css"
 
 const { Option } = Select;
 
@@ -45,12 +43,8 @@ export default function Elections({
   const [newElecName, setNewElecName] = useState("");
   const [newElecAllocatedVotes, setNewElecAllocatedVotes] = useState(10);
   const [newElecAllocatedFunds, setNewElecAllocatedFunds] = useState(1);
-  const [customAddress, setCustomAddress] = useState("");
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const [newElecWorkers, setNewElecWorkers] = useState([]);
-  const [newElecAddr, setNewElecAddr] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
 
   const [form] = Form.useForm();
@@ -61,6 +55,10 @@ export default function Elections({
     setIsModalVisible(true);
   };
 
+  const hideModal = () => {
+    setIsModalVisible(false);
+  }
+
   const handleOk = () => {
     setIsModalVisible(false);
   };
@@ -69,41 +67,6 @@ export default function Elections({
     setIsModalVisible(false);
   };
 
-  //   , , "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
-  //   "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65"
-  function reverseMapping(obj) {
-    var ret = {};
-    for (var key in obj) {
-      ret[obj[key]] = key;
-    }
-    return ret;
-  }
-  const worker_mapping = {
-    swapp: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-    hans: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-    bliss: "0xcd3B766CCDd6AE721141F452C550Ca635964ce71",
-    varun: "0x2546BcD3c84621e976D8185a91A922aE77ECEc30",
-    ryan: "0xdD2FD4581271e230360230F9337D5c0430Bf44C0",
-    bob: "0x6b88d83B4c7C5D0d6C7b503B82d54771A91E6f8f",
-    deployer: "0x1708cE4768724F2C469B8613D2C05462581ED789",
-  };
-
-  function handleAddrSelected(value) {
-    // console.log(value);
-    const addrs = [];
-    value.forEach(v => {
-      const addr = worker_mapping[Object.keys(worker_mapping)[v]];
-      addrs.push(addr);
-    });
-    setNewElecAddr(addrs);
-  }
-
-  function addCustomAddr() {
-    if (customAddress != "") {
-      setNewElecAddr([...newElecAddr, customAddress]);
-      setCustomAddress("");
-    }
-  }
 
   function viewElection(record) {
     route_history.push("/voting/" + record.key);
@@ -121,87 +84,83 @@ export default function Elections({
     console.log(await result);
   };
 
-  const payoutElection = async record => {
-    // const result = tx(
-    //   writeContracts.Diplomacy.paypoutElection(record.key),
-    //   update => {
-    //     console.log("📡 Transaction Update:", update);
-    //     if (update && (update.status === "confirmed" || update.status === 1)) {
-    //       console.log(" 🍾 Transaction " + update.hash + " finished!");
-    //     }
-    //   },
-    // );
-    // console.log("awaiting metamask/web3 confirm result...", result);
-    // console.log(await result);
-  };
-
   const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
   const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
 
   const columns = [
     {
-      title: "Created date",
+      title: "Created",
       dataIndex: "created_date",
       key: "created_date",
+      width: 150,
+      align: "center",
     },
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
+      width: 150,
+      align: "center",
     },
     {
-      title: "Creator",
+      title: "Admin",
       dataIndex: "admin",
       key: "admin",
-    },
-    {
-      title: "Roles",
-      dataIndex: "roles",
-      key: "roles",
-      render: roles => (
-        <>
-          {roles.map(r => {
-            //   let color = tag.length > 5 ? 'geekblue' : 'green';
-            //   if (tag === 'loser') {
-            //     color = 'volcano';
-            //   }
-            let color = "geekblue";
-            if (r == "candidate") {
-              color = "green";
-            }
-            return (
-              <Tag color={color} key={r}>
-                {r.toLowerCase()}
-              </Tag>
-            );
-          })}
-        </>
+      width: 250,
+      align: "center",
+      render: admin => (
+        <Address
+          address={admin}
+          fontSize="14pt"
+          ensProvider={mainnetProvider}
+          blockExplorer={blockExplorer}
+        />
       ),
     },
     {
-      title: "# Workers",
-      dataIndex: "n_workers",
-      key: "n_workers",
+      title: "Role",
+      dataIndex: "roles",
+      key: "roles",
+      align: "center",
+      render: roles => (
+        roles.map(r => {
+          //   let color = tag.length > 5 ? 'geekblue' : 'green';
+          //   if (tag === 'loser') {
+          //     color = 'volcano';
+          //   }
+          let color = "geekblue";
+          if (r == "candidate") {
+            color = "green";
+          }
+          return (
+            <Tag color={color} key={r}>
+              {r.toLowerCase()}
+            </Tag>
+          );
+        })
+      ),
     },
     {
-      title: "# Voted",
+      title: "Candidates",
+      dataIndex: "n_workers",
+      key: "n_workers",
+      align: "center",
+    },
+    {
+      title: "Voted",
       dataIndex: "n_voted",
       key: "n_voted",
+      align: "center",
     },
     {
       title: "Action",
       key: "action",
+      align: "center",
       render: (text, record, index) => (
         <>
           <Space size="middle">
-            <Button type="primary" size="small" onClick={() => viewElection(record)}>
+            <Button type="default" size="small" shape="round" onClick={() => viewElection(record)}>
               View
-            </Button>
-            <Button type="primary" size="small" onClick={() => endElection(record)}>
-              End
-            </Button>
-            <Button type="primary" size="small" onClick={() => payoutElection(record)}>
-              Payout
             </Button>
           </Space>
         </>
@@ -228,7 +187,8 @@ export default function Elections({
           //   console.log("electionCreatedEvent ", electionCreatedEvent);
           updateView();
           setIsCreating(false);
-          setNewElecAddr([]);
+          // setNewElecAddr([]);
+          setAddresses([]);
           setNewElecName("");
           form.resetFields();
         }
@@ -250,13 +210,6 @@ export default function Elections({
 
   const init = async () => {
     console.log("contract loaded ", address);
-
-    let workers = [];
-    for (let i = 0; i < Object.keys(worker_mapping).length; i++) {
-      workers.push(<Option key={i}>{Object.keys(worker_mapping)[i]}</Option>);
-    }
-    setNewElecWorkers(workers);
-
     updateView();
   };
 
@@ -266,7 +219,6 @@ export default function Elections({
     // console.log("numElections ", numElections);
     setNumElections(numElections);
     let data = [];
-    let reverseWorkerMapping = reverseMapping(worker_mapping);
     let elections = [];
     for (let i = 0; i < numElections; i++) {
       const election = await readContracts.Diplomacy.getElectionById(i);
@@ -277,15 +229,9 @@ export default function Elections({
       let created_date = new Date(election.createdAt.toNumber() * 1000);
       created_date = created_date.toISOString().substring(0, 10);
       let admin = election.admin;
-      //   console.log("admin ", admin, reverseWorkerMapping[admin]);
-      if (reverseWorkerMapping[admin]) {
-        admin = reverseWorkerMapping[admin];
-      } else {
-        admin = admin.substring(0, 6);
-      }
       let roles = [];
-      const isCreator = election.admin == address;
-      if (isCreator) {
+      const isAdmin = election.admin == address;
+      if (isAdmin) {
         roles.push("admin");
       }
       const isCandidate = await readContracts.Diplomacy.canVote(i, address);
@@ -313,7 +259,7 @@ export default function Elections({
   const onFinish = async () => {
     setIsCreating(true);
     const result = tx(
-      writeContracts.Diplomacy.newElection(newElecName, newElecAllocatedFunds, newElecAllocatedVotes, newElecAddr),
+      writeContracts.Diplomacy.newElection(newElecName, newElecAllocatedFunds, newElecAllocatedVotes, addresses),
       update => {
         console.log("📡 Transaction Update:", update);
         if (update && (update.status === "confirmed" || update.status === 1)) {
@@ -327,10 +273,14 @@ export default function Elections({
     // console.log("awaiting metamask/web3 confirm result...", result);
     // console.log(await result);
   };
+  const slider = useRef(null);
+
+  const [addresses, setAddresses] = useState([]);
+  const [toAddress, setToAddress] = useState("");
 
   return (
     <>
-      <Modal title="Election Info" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+      <Modal visible={isModalVisible} footer={false} onCancel={handleCancel}>
         <Form
           form={form}
           name="basic"
@@ -339,88 +289,185 @@ export default function Elections({
           initialValues={{ remember: false }}
           onFinish={onFinish}
         >
-          <Form.Item name="name" label="Name" rules={[{ required: true, message: "Please input election name!" }]}>
-            <Input
-              placeholder="Election Name"
-              onChange={e => {
-                setNewElecName(e.target.value);
-              }}
-            />
-          </Form.Item>
-          <Form.Item name="funds" label="Funds" rules={[{ required: true, message: "Please input funds!" }]}>
-            <Input
-              placeholder="Funds (ETH)"
-              onChange={e => {
-                setNewElecAllocatedFunds(toWei(e.target.value));
-              }}
-            />
-          </Form.Item>
-          <Form.Item
-            name="votes"
-            label="N Votes"
-            rules={[{ required: true, message: "Please input number of votes!" }]}
-          >
-            <Input
-              placeholder="Number of Votes per Candidate"
-              onChange={e => {
-                setNewElecAllocatedVotes(e.target.value);
-              }}
-            />
-          </Form.Item>
-          <Form.Item label="Candidates" name="addr">
-            <Select
-              mode="multiple"
-              //   style={{ width: "100%" }}
-              placeholder="Add multiple candidates"
-              onChange={handleAddrSelected}
-            >
-              {newElecWorkers}
-            </Select>
-          </Form.Item>
-          <Form.Item label="Custom" name="custom">
-            <Space>
-              <Input
-                placeholder="Enter address"
-                value={customAddress}
-                onChange={e => {
-                  setCustomAddress(e.target.value);
-                }}
+          <Carousel ref={slider} afterChange={() => { }} speed="300" dots={false}>
+
+            <div>
+              <PageHeader
+                ghost={false}
+                title="Create A New Election"
+                // subTitle="Election Options"
               />
-              <Button type="primary" size="small" onClick={() => addCustomAddr()}>
-                +
-              </Button>
-            </Space>
-          </Form.Item>
-          <Form.Item>
-            {!isCreating && (
-              <Button type="primary" htmlType="submit" className="login-form-button">
-                Create new
-              </Button>
-            )}
-            {isCreating && (
-              <Button type="primary" size="small" loading>
-                Creating
-              </Button>
-            )}
-          </Form.Item>
+              <Form.Item name="name" label="Name" rules={[{ required: true, message: "Please input election name!" }]}>
+                <Input
+                  size="large"
+                  placeholder="Election Name"
+                  onChange={e => {
+                    e.target.value ? setNewElecName(e.target.value) : null;
+                  }}
+                />
+              </Form.Item>
+              <Form.Item name="funds" label="Funds" rules={[{ required: true, message: "Please input funds!" }]}>
+                <EtherInput
+                  // autofocus
+                  price={price}
+                  value={newElecAllocatedFunds}
+                  placeholder="Enter amount"
+                  onChange={value => {
+                    console.log(value.toFixed(18))
+                    value ? setNewElecAllocatedFunds(toWei(value.toFixed(18))) : null;
+                  }}
+                />
+              </Form.Item>
+              <Form.Item
+                name="votes"
+                label="Vote Allocation"
+                rules={[{ required: true, message: "Please input number of votes!" }]}
+              >
+                <InputNumber
+                  size="large"
+                  placeholder="1"
+                  onChange={value => {
+                    value ? setNewElecAllocatedVotes(value) : null;
+                  }}
+                />
+              </Form.Item>
+
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+              }}>
+                <Divider>
+                <Button type="primary" size="large" shape="round" onClick={() => { slider.current.next() }}>
+                  Continue
+                </Button>
+                </Divider>
+              </div>
+
+            </div>
+
+            <div>
+              <PageHeader
+                ghost={false}
+                onBack={() => { slider.current.prev() }}
+                title="Add Election Candidates"
+                // subTitle="Add Election Candidates"
+              />
+              <Form.Item name="candidates" style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+              }}>
+                <Space>
+                  <AddressInput
+                    ensProvider={mainnetProvider}
+                    placeholder="Enter address"
+                    value={toAddress}
+                    onChange={setToAddress}
+                  />
+                  <Button type="default" size="large" onClick={() => {
+                    addresses.push(toAddress)
+                    setToAddress("");
+                  }}>
+                    + Add
+                  </Button>
+                </Space>
+
+              </Form.Item>
+              <List
+                style={{ overflow: "auto", height: "200px" }}
+                bordered
+                dataSource={addresses}
+                renderItem={(item, index) => (
+                  <List.Item>
+                    <div>
+                      <Address address={item} ensProvider={mainnetProvider} fontSize="14pt" />
+                      <Button
+                        type="link"
+                        onClick={async () => {
+                          const updatedAddresses = [...addresses];
+                          updatedAddresses.splice(index, 1);
+                          setAddresses(updatedAddresses);
+                        }}
+                        size="medium"
+                        style={{ marginLeft: "200px" }}
+                      >
+                        ❌
+                      </Button>
+                    </div>
+                  </List.Item>
+                )}
+              />
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+              }}>
+                <Divider>
+                <Button type="primary" size="large" shape="round" onClick={() => { slider.current.next() }}>
+                  Continue
+                </Button>
+                </Divider>
+              </div>
+            </div>
+
+            <div>
+              <PageHeader
+                ghost={false}
+                onBack={() => { slider.current.prev() }}
+                title="Confirm Election Details"
+                // subTitle="Review Election Details"
+              />
+
+              <Descriptions title="Election Details" column={1} size="small" bordered>
+                <Descriptions.Item label="Name">{newElecName}</Descriptions.Item>
+                <Descriptions.Item label="Allocated Funds (wei)">{newElecAllocatedFunds}</Descriptions.Item>
+                <Descriptions.Item label="Votes/Candidate">{newElecAllocatedVotes}</Descriptions.Item>
+                <Descriptions.Item label="Candidates">
+                  <ul>{addresses.map(adr => {
+                    return <li><Address address={adr} fontSize="14pt" /> </li>
+                  })} 
+                  </ul>
+                </Descriptions.Item>
+              </Descriptions>
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
+              }}>
+                <Divider>
+                {!isCreating && (
+                  <Button type="primary" size="large" shape="round" htmlType="submit" className="login-form-button">
+                    Confirm Election
+                  </Button>
+                )}
+                {isCreating && (
+                  <Button type="primary" size="large" shape="round" loading>
+                    Creating
+                  </Button>
+                )}
+                </Divider>
+              </div>
+            </div>
+
+          </Carousel>
         </Form>
+
       </Modal>
+
       <div className="elections-view" style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
         <PageHeader
           ghost={false}
           title="Elections"
           subTitle={`Count: ${numElections}`}
           extra={[
-            <Button style={{ margin: 4 }} onClick={() => createNewElection()}>
+            <Button type="primary" size="large" shape="round" style={{ margin: 4 }} onClick={() => createNewElection()}>
               + Create Election
             </Button>,
           ]}
-        >
-          {/* <h2>Elections</h2>
-          <div>Number of elections: {numElections}</div> */}
-          <Divider />
-          <Table dataSource={tableDataSrc} columns={columns} />
-        </PageHeader>
+        />
+        <Divider />
+        <Table dataSource={tableDataSrc} columns={columns} />
       </div>
     </>
   );

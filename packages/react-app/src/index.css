@@ -22,3 +22,8 @@ code {
 .ant-modal-content {
   border-radius: 0.8em;
 }
+
+
+.ant-divider-horizontal.ant-divider-with-text {
+  color: rgb(0 0 0 / 18%);
+}

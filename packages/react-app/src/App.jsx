@@ -73,7 +73,7 @@ if (DEBUG) console.log("🏠 Connecting to provider:", localProviderUrlFromEnv);
 const localProvider = new ethers.providers.StaticJsonRpcProvider(localProviderUrlFromEnv);
 
 // 🔭 block explorer URL
-const blockExplorer = targetNetwork.blockExplorer;
+export const blockExplorer = targetNetwork.blockExplorer;
 
 // Coinbase walletLink init
 const walletLink = new WalletLink({
