@@ -277,15 +277,23 @@ export default function Voting({
     for (let i = 0; i < election.candidates.length; i++) {
       // Get scores arr for each candidate
       let scores = await readContracts.Diplomacy.getElectionScores(id, election.candidates[i]);
-      let scoresSumSqr = Math.pow(
-        scores.map(Number).reduce((a, b) => {
-          return a + b;
-        }),
-        2,
-      ); //reduce((a, b) => {Number(a) + Number(b)});
-      totalScoreSumSqr += scoresSumSqr;
+      console.log("scores ", scores);
+      let scoresSumSqr = 0;
+      if (scores.length != 0) {
+        scoresSumSqr = Math.pow(
+          scores.map(Number).reduce((a, b) => {
+            return a + b;
+          }),
+          2,
+        ); //reduce((a, b) => {Number(a) + Number(b)});
+        totalScoreSumSqr += scoresSumSqr;
+      }
       payoutInfo.push({ address: election.candidates[i], scoresSumSqr: scoresSumSqr });
+      updatePayoutInfo(election, payoutInfo, totalScoreSumSqr);
     }
+  };
+
+  function updatePayoutInfo(election, payoutInfo, totalScoreSumSqr) {
     const payoutRatio = [];
     for (let i = 0; i < payoutInfo.length; i++) {
       payoutRatio.push({ address: payoutInfo[i].address, ratio: payoutInfo[i].scoresSumSqr / totalScoreSumSqr });
@@ -315,7 +323,7 @@ export default function Voting({
         tableDataSrc[i].payout = w;
       });
     }
-  };
+  }
 
   const endElection = async () => {
     calculatePayout();
