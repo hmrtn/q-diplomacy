@@ -313,8 +313,12 @@ export default function Elections({
                   value={newElecAllocatedFunds}
                   placeholder="Enter amount"
                   onChange={value => {
-                    console.log(value.toFixed(18))
-                    value ? setNewElecAllocatedFunds(toWei(value.toFixed(18))) : null;
+                    // console.log(value)
+                    // console.log(typeof value)
+                    let weiValue = toWei(Number(value).toFixed(18).toString());
+                    setNewElecAllocatedFunds(weiValue);
+                    // console.log(weiValue)
+                    // value ? setNewElecAllocatedFunds(toWei(value.toFixed(18))) : toWei("0", "ether");
                   }}
                 />
               </Form.Item>
