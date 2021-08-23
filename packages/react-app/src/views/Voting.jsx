@@ -371,7 +371,7 @@ export default function Voting({
     <>
       <div
         className="voting-view"
-        style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}
+        style={{ border: "1px solid #cccccc", padding: 16, width: 900, margin: "auto", marginTop: 64 }}
       >
         <PageHeader
           ghost={false}

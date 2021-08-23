@@ -177,7 +177,9 @@ export default function Elections({
           setAddresses([]);
           setNewElecName("");
           form.resetFields();
+          if ( slider && slider.current ) {
           slider.current.goTo(0);
+          }
         }
       }
     }
