@@ -5,7 +5,7 @@
       "chainId": "4",
       "contracts": {
         "Diplomacy": {
-          "address": "0x23FBB8c1BB199d41423003caF828653364506A1B",
+          "address": "0xA04F12f85aAC2824Be76aeCCb301A87Bee6a1Ea8",
           "abi": [
             {
               "inputs": [],
@@ -263,11 +263,6 @@
                   "type": "bool"
                 },
                 {
-                  "internalType": "bool",
-                  "name": "payoutCompleted",
-                  "type": "bool"
-                },
-                {
                   "internalType": "uint256",
                   "name": "createdAt",
                   "type": "uint256"
@@ -352,11 +347,6 @@
                 {
                   "internalType": "bool",
                   "name": "isActive",
-                  "type": "bool"
-                },
-                {
-                  "internalType": "bool",
-                  "name": "payoutCompleted",
                   "type": "bool"
                 }
               ],

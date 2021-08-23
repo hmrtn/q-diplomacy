@@ -68,14 +68,9 @@ export default function Voting({
       title: "Address",
       dataIndex: "address",
       key: "address",
-      render: (address) => (
-        <Address
-          address={address}
-          fontSize="14pt"
-          ensProvider={mainnetProvider}
-          blockExplorer={blockExplorer}
-        />
-      )
+      render: address => (
+        <Address address={address} fontSize="14pt" ensProvider={mainnetProvider} blockExplorer={blockExplorer} />
+      ),
     },
     {
       title: "# Votes",
@@ -246,7 +241,7 @@ export default function Voting({
       let tempTotalVotes = election.votes.toNumber();
       let weiToPay = 0;
       if (tempTotalVotes != 0) {
-        weiToPay = 10000//payoutInfo.payout[i] > 0 ? payoutInfo.payout[i].toString() : toWei("0", "ether");
+        weiToPay = 10000; //payoutInfo.payout[i] > 0 ? payoutInfo.payout[i].toString() : toWei("0", "ether");
       }
       data.push({ key: i, name: name, address: addr, n_votes: 0, score: scoresSum, payout: weiToPay });
     }
@@ -277,68 +272,70 @@ export default function Voting({
   };
 
   //////
-  const [payoutInfo, setPayoutInfo] = useState({candidates: null, payout: null}); 
+  const [payoutInfo, setPayoutInfo] = useState({ candidates: null, payout: null });
 
   const calculatePayout = async () => {
-
     const election = await readContracts.Diplomacy.getElectionById(id);
 
     // console.log({election})
 
-    const electionFundsEth = Number(fromWei(election.funds.toString(), "ether")); 
+    const electionFundsEth = Number(fromWei(election.funds.toString(), "ether"));
     // console.log({electionFundsEth})
-    
-    let electionScoresSum = 0; 
 
-    let candidates = []; 
-    let sqrdSumScore = []; 
+    let electionScoresSum = 0;
+
+    let candidates = [];
+    let sqrdSumScore = [];
     let payoutRatio = [];
-    let ethToPay = []; 
+    let ethToPay = [];
 
-    for ( let i = 0; i < election.candidates.length; i++ ) {
-
+    for (let i = 0; i < election.candidates.length; i++) {
       let candidate = election.candidates[i];
       // console.log({candidate});
 
-      let candidateScores = await readContracts.Diplomacy.getElectionScores(id, candidate);        
+      let candidateScores = await readContracts.Diplomacy.getElectionScores(id, candidate);
       // console.log({candidateScores});
 
       let candidateSqrdSumScore = Math.pow(
-        candidateScores
-            .map(Number)
-            .reduce((x, y) => { return x + y; }, 0), 
-            2
+        candidateScores.map(Number).reduce((x, y) => {
+          return x + y;
+        }, 0),
+        2,
       );
       // console.log({candidateSqrdSumScore});
 
-      electionScoresSum += candidateSqrdSumScore; 
+      electionScoresSum += candidateSqrdSumScore;
 
       candidates.push(candidate);
       sqrdSumScore.push(candidateSqrdSumScore);
-
     }
 
-    payoutRatio = sqrdSumScore.map(d => { 
-      return d / electionScoresSum;  // Should election score sum be squared as well?
-    });  
-    console.log({payoutRatio})
-
-    ethToPay = payoutRatio.map(d => { 
-      return electionFundsEth * d; 
+    payoutRatio = sqrdSumScore.map(d => {
+      if (electionScoresSum == 0) {
+        return 0;
+      }
+      return d / electionScoresSum; // Should election score sum be squared as well?
     });
-    console.log({ethToPay})
-    
+    console.log({ payoutRatio });
+
+    ethToPay = payoutRatio.map(d => {
+      return electionFundsEth * d;
+    });
+    console.log({ ethToPay });
+
     // const candidatesPayoutInfo = {
-    //   candidates: candidates, 
+    //   candidates: candidates,
     //   ethToPay: ethToPay
-    // }; 
+    // };
     // console.log({candidatesPayoutInfo})
 
     payoutInfo.candidates = candidates;
-    payoutInfo.payout = ethToPay.map(String).map(d => {return toWei(d)}, 0);
+    payoutInfo.payout = ethToPay.map(String).map(d => {
+      return toWei(d);
+    }, 0);
 
     // setPayoutInfo(candidatesPayoutInfo);
-    console.log({payoutInfo})
+    console.log({ payoutInfo });
 
     // console.log({ election });
 
@@ -403,8 +400,8 @@ export default function Voting({
 
     // payoutInfo.payout.forEach((w, i) => {
     //   tableDataSrc[i].payout = w;
-    // }); 
-  // }
+    // });
+    // }
   };
 
   // useEffect(() => {
@@ -412,7 +409,7 @@ export default function Voting({
   //   console.log(payoutInfo)
   //   payoutInfo.payout.forEach((w, i) => {
   //     tableDataSrc[i].payout = w;
-  //   }); 
+  //   });
   // }, [payoutInfo.payout])
 
   const endElection = async () => {
@@ -429,15 +426,13 @@ export default function Voting({
 
   const payoutTokens = async () => {
     console.log("payoutTokens");
-    console.log({payoutInfo})
+    console.log({ payoutInfo });
     const election = await readContracts.Diplomacy.getElectionById(id);
     tx(
-      writeContracts.Diplomacy.payoutElection(
-        id, 
-        payoutInfo.candidates, 
-        payoutInfo.payout, 
-        { value: election.funds, gasLimit: 28000000 }
-      ),
+      writeContracts.Diplomacy.payoutElection(id, payoutInfo.candidates, payoutInfo.payout, {
+        value: election.funds,
+        gasLimit: 28000000,
+      }),
     );
   };
 
