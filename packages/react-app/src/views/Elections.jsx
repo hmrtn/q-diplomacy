@@ -258,6 +258,10 @@ export default function Elections({
 
   const onFinish = async () => {
     setIsCreating(true);
+                    console.log({newElecAllocatedFunds})
+                    console.log({newElecAllocatedVotes})
+                    console.log({newElecName})
+                    console.log({addresses})
     const result = tx(
       writeContracts.Diplomacy.newElection(newElecName, newElecAllocatedFunds, newElecAllocatedVotes, addresses),
       update => {
@@ -317,7 +321,6 @@ export default function Elections({
                     // console.log(typeof value)
                     let weiValue = toWei(Number(value).toFixed(18).toString());
                     setNewElecAllocatedFunds(weiValue);
-                    // console.log(weiValue)
                     // value ? setNewElecAllocatedFunds(toWei(value.toFixed(18))) : toWei("0", "ether");
                   }}
                 />
@@ -331,7 +334,7 @@ export default function Elections({
                   size="large"
                   placeholder="1"
                   onChange={value => {
-                    value ? setNewElecAllocatedVotes(value) : null;
+                    setNewElecAllocatedVotes(value);
                   }}
                 />
               </Form.Item>
