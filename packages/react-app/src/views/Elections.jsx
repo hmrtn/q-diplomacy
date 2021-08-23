@@ -1,30 +1,17 @@
 import { PageHeader, Carousel } from "antd";
 import { toWei, fromWei } from "web3-utils";
-import {
-  Button,
-  Divider,
-  Input,
-  InputNumber,
-  List,
-  Table,
-  Modal,
-  Form,
-  Select,
-  Space,
-  Tag,
-  Descriptions, 
-} from "antd";
+import { Button, Divider, Input, InputNumber, List, Table, Modal, Form, Select, Space, Tag, Descriptions } from "antd";
 import React, { useState, useEffect, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import { Address, Balance } from "../components";
 
-import { useEventListener, useExchangePrice, } from "../hooks";
+import { useEventListener, useExchangePrice } from "../hooks";
 import AddressInput from "../components/AddressInput";
 import EtherInput from "../components/EtherInput";
 
 import { mainnetProvider, blockExplorer } from "../App";
 
-import "../index.css"
+import "../index.css";
 
 const { Option } = Select;
 
@@ -57,7 +44,7 @@ export default function Elections({
 
   const hideModal = () => {
     setIsModalVisible(false);
-  }
+  };
 
   const handleOk = () => {
     setIsModalVisible(false);
@@ -66,7 +53,6 @@ export default function Elections({
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-
 
   function viewElection(record) {
     route_history.push("/voting/" + record.key);
@@ -109,12 +95,7 @@ export default function Elections({
       width: 250,
       align: "center",
       render: admin => (
-        <Address
-          address={admin}
-          fontSize="14pt"
-          ensProvider={mainnetProvider}
-          blockExplorer={blockExplorer}
-        />
+        <Address address={admin} fontSize="14pt" ensProvider={mainnetProvider} blockExplorer={blockExplorer} />
       ),
     },
     {
@@ -122,7 +103,7 @@ export default function Elections({
       dataIndex: "roles",
       key: "roles",
       align: "center",
-      render: roles => (
+      render: roles =>
         roles.map(r => {
           //   let color = tag.length > 5 ? 'geekblue' : 'green';
           //   if (tag === 'loser') {
@@ -137,8 +118,7 @@ export default function Elections({
               {r.toLowerCase()}
             </Tag>
           );
-        })
-      ),
+        }),
     },
     {
       title: "Candidates",
@@ -150,6 +130,12 @@ export default function Elections({
       title: "Voted",
       dataIndex: "n_voted",
       key: "n_voted",
+      align: "center",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
       align: "center",
     },
     {
@@ -191,6 +177,7 @@ export default function Elections({
           setAddresses([]);
           setNewElecName("");
           form.resetFields();
+          slider.current.goTo(0);
         }
       }
     }
@@ -226,6 +213,11 @@ export default function Elections({
       const name = election.name;
       const n_addr = election.n_addr.toNumber();
       const n_voted = (await readContracts.Diplomacy.getElectionVoted(i)).toNumber();
+
+      let status = "Active";
+      if (!election.isActive) {
+        status = "Inactive";
+      }
       let created_date = new Date(election.createdAt.toNumber() * 1000);
       created_date = created_date.toISOString().substring(0, 10);
       let admin = election.admin;
@@ -246,6 +238,7 @@ export default function Elections({
         n_voted: n_voted,
         admin: admin,
         roles: roles,
+        status: status,
       });
     }
     setTableDataSrc(data);
@@ -258,10 +251,10 @@ export default function Elections({
 
   const onFinish = async () => {
     setIsCreating(true);
-                    console.log({newElecAllocatedFunds})
-                    console.log({newElecAllocatedVotes})
-                    console.log({newElecName})
-                    console.log({addresses})
+    console.log({ newElecAllocatedFunds });
+    console.log({ newElecAllocatedVotes });
+    console.log({ newElecName });
+    console.log({ addresses });
     const result = tx(
       writeContracts.Diplomacy.newElection(newElecName, newElecAllocatedFunds, newElecAllocatedVotes, addresses),
       update => {
@@ -293,8 +286,7 @@ export default function Elections({
           initialValues={{ remember: false }}
           onFinish={onFinish}
         >
-          <Carousel ref={slider} afterChange={() => { }} speed="300" dots={false}>
-
+          <Carousel ref={slider} afterChange={() => {}} speed="300" dots={false}>
             <div>
               <PageHeader
                 ghost={false}
@@ -339,32 +331,45 @@ export default function Elections({
                 />
               </Form.Item>
 
-              <div style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center"
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
                 <Divider>
-                <Button type="primary" size="large" shape="round" onClick={() => { slider.current.next() }}>
-                  Continue
-                </Button>
+                  <Button
+                    type="primary"
+                    size="large"
+                    shape="round"
+                    onClick={() => {
+                      slider.current.next();
+                    }}
+                  >
+                    Continue
+                  </Button>
                 </Divider>
               </div>
-
             </div>
 
             <div>
               <PageHeader
                 ghost={false}
-                onBack={() => { slider.current.prev() }}
+                onBack={() => {
+                  slider.current.prev();
+                }}
                 title="Add Election Candidates"
                 // subTitle="Add Election Candidates"
               />
-              <Form.Item name="candidates" style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center"
-              }}>
+              <Form.Item
+                name="candidates"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
                 <Space>
                   <AddressInput
                     ensProvider={mainnetProvider}
@@ -372,14 +377,17 @@ export default function Elections({
                     value={toAddress}
                     onChange={setToAddress}
                   />
-                  <Button type="default" size="large" onClick={() => {
-                    addresses.push(toAddress)
-                    setToAddress("");
-                  }}>
+                  <Button
+                    type="default"
+                    size="large"
+                    onClick={() => {
+                      addresses.push(toAddress);
+                      setToAddress("");
+                    }}
+                  >
                     + Add
                   </Button>
                 </Space>
-
               </Form.Item>
               <List
                 style={{ overflow: "auto", height: "200px" }}
@@ -405,15 +413,24 @@ export default function Elections({
                   </List.Item>
                 )}
               />
-              <div style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center"
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
                 <Divider>
-                <Button type="primary" size="large" shape="round" onClick={() => { slider.current.next() }}>
-                  Continue
-                </Button>
+                  <Button
+                    type="primary"
+                    size="large"
+                    shape="round"
+                    onClick={() => {
+                      slider.current.next();
+                    }}
+                  >
+                    Continue
+                  </Button>
                 </Divider>
               </div>
             </div>
@@ -421,7 +438,9 @@ export default function Elections({
             <div>
               <PageHeader
                 ghost={false}
-                onBack={() => { slider.current.prev() }}
+                onBack={() => {
+                  slider.current.prev();
+                }}
                 title="Confirm Election Details"
                 // subTitle="Review Election Details"
               />
@@ -431,38 +450,46 @@ export default function Elections({
                 <Descriptions.Item label="Allocated Funds (wei)">{newElecAllocatedFunds}</Descriptions.Item>
                 <Descriptions.Item label="Votes/Candidate">{newElecAllocatedVotes}</Descriptions.Item>
                 <Descriptions.Item label="Candidates">
-                  <ul>{addresses.map(adr => {
-                    return <li><Address address={adr} fontSize="14pt" /> </li>
-                  })} 
+                  <ul>
+                    {addresses.map(adr => {
+                      return (
+                        <li>
+                          <Address address={adr} fontSize="14pt" />{" "}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </Descriptions.Item>
               </Descriptions>
-              <div style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center"
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
                 <Divider>
-                {!isCreating && (
-                  <Button type="primary" size="large" shape="round" htmlType="submit" className="login-form-button">
-                    Confirm Election
-                  </Button>
-                )}
-                {isCreating && (
-                  <Button type="primary" size="large" shape="round" loading>
-                    Creating
-                  </Button>
-                )}
+                  {!isCreating && (
+                    <Button type="primary" size="large" shape="round" htmlType="submit" className="login-form-button">
+                      Confirm Election
+                    </Button>
+                  )}
+                  {isCreating && (
+                    <Button type="primary" size="large" shape="round" loading>
+                      Creating
+                    </Button>
+                  )}
                 </Divider>
               </div>
             </div>
-
           </Carousel>
         </Form>
-
       </Modal>
 
-      <div className="elections-view" style={{ border: "1px solid #cccccc", padding: 16, width: 800, margin: "auto", marginTop: 64 }}>
+      <div
+        className="elections-view"
+        style={{ border: "1px solid #cccccc", padding: 16, width: 900, margin: "auto", marginTop: 64 }}
+      >
         <PageHeader
           ghost={false}
           title="Elections"

@@ -14,6 +14,7 @@ contract Diplomacy is AccessControl, Ownable {
     struct Election {
         string name; // Creator title/names/etc
         bool active; // Election status
+		bool paid; //election is paid out
         uint256 createdAt; // Creation block time-stamp
         address[] candidates; // Candidates (who can vote/be voted)
         uint256 funds;
@@ -190,6 +191,8 @@ contract Diplomacy is AccessControl, Ownable {
             payable(_adrs[i]).transfer(_pay[i] * 1 wei);
         }
 
+		elections[electionId].paid = true;
+
         emit ElectionPaid(electionId);
     }
 
@@ -216,7 +219,8 @@ contract Diplomacy is AccessControl, Ownable {
             uint256 funds,
             int256 votes,
             address admin,
-            bool isActive
+            bool isActive,
+			bool paid
         )
     {
         name = elections[electionId].name;
@@ -227,6 +231,7 @@ contract Diplomacy is AccessControl, Ownable {
         votes = elections[electionId].votes;
         admin = elections[electionId].admin;
         isActive = elections[electionId].active;
+		paid = elections[electionId].paid;
     }
 
     function getElectionScores(uint256 electionId, address _adr)

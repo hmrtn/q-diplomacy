@@ -29,7 +29,7 @@ import React, { useEffect, useState } from "react";
 */
 
 export default function EtherInput(props) {
-  const [mode, setMode] = useState(props.price ? "USD" : "ETH");
+  const [mode, setMode] = useState(props.price ? "ETH" : "USD");
   const [display, setDisplay] = useState();
   const [value, setValue] = useState();
 

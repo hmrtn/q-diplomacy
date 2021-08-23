@@ -46,6 +46,7 @@ export default function Voting({
   const [alreadyVoted, setAlreadyVoted] = useState(false);
   const [canEndElection, setCanEndElection] = useState(false);
   const [isElectionActive, setIsElectionActive] = useState(false);
+  const [isElecPayoutComplete, setIsElecPayoutComplete] = useState(false);
 
   const [electionWeisToPay, setElectionWeisToPay] = useState([]);
   const [electionAddressesToPay, setElectionAddressesToPay] = useState([]);
@@ -208,6 +209,7 @@ export default function Voting({
     const isCreator = election.admin == address;
     setCanEndElection(isCreator);
     setIsElectionActive(election.isActive);
+    setIsElecPayoutComplete(election.paid);
     const funds = election.funds;
     const ethFund = fromWei(funds.toString(), "ether");
     setTotalFunds(ethFund);
@@ -238,16 +240,16 @@ export default function Voting({
               })
               .toFixed(4)
           : "0";
-      let tempTotalVotes = election.votes.toNumber();
       let weiToPay = 0;
-      if (tempTotalVotes != 0) {
-        weiToPay = 10000; //payoutInfo.payout[i] > 0 ? payoutInfo.payout[i].toString() : toWei("0", "ether");
-      }
       data.push({ key: i, name: name, address: addr, n_votes: 0, score: scoresSum, payout: weiToPay });
     }
-    setTableDataSrc(data);
 
-    calculatePayout();
+    let payoutInfo = await calculatePayout();
+    payoutInfo.payout.forEach((p, i) => {
+      data[i].payout = p;
+    });
+
+    setTableDataSrc(data);
   };
 
   const castVotes = async () => {
@@ -316,18 +318,12 @@ export default function Voting({
       }
       return d / electionScoresSum; // Should election score sum be squared as well?
     });
-    console.log({ payoutRatio });
+    // console.log({ payoutRatio });
 
     ethToPay = payoutRatio.map(d => {
       return electionFundsEth * d;
     });
-    console.log({ ethToPay });
-
-    // const candidatesPayoutInfo = {
-    //   candidates: candidates,
-    //   ethToPay: ethToPay
-    // };
-    // console.log({candidatesPayoutInfo})
+    // console.log({ ethToPay });
 
     payoutInfo.candidates = candidates;
     payoutInfo.payout = ethToPay.map(String).map(d => {
@@ -335,73 +331,8 @@ export default function Voting({
     }, 0);
 
     // setPayoutInfo(candidatesPayoutInfo);
-    console.log({ payoutInfo });
-
-    // console.log({ election });
-
-    // let totalScoreSumSqr = 0;
-
-    // const payoutInfo = [];
-
-    // for (let i = 0; i < election.candidates.length; i++) {
-    //   // Get scores arr for each candidate
-    //   let scores = await readContracts.Diplomacy.getElectionScores(id, election.candidates[i]);
-    //   let scoresSumSqr = Math.pow(
-    //     scores.map(Number).reduce((a, b) => {
-    //       return a + b;
-    //     }, 0),
-    //     2,
-    //   ); //reduce((a, b) => {Number(a) + Number(b)});
-    //   totalScoreSumSqr += scoresSumSqr;
-    //   payoutInfo.push({ address: election.candidates[i], scoresSumSqr: scoresSumSqr });
-    // }
-
-    // const payoutRatio = [];
-    // for (let i = 0; i < payoutInfo.length; i++) {
-    //   payoutRatio.push({ address: payoutInfo[i].address, ratio: payoutInfo[i].scoresSumSqr / totalScoreSumSqr });
-    // }
-
-    // // console.log({ payoutRatio });
-    // const ethFunds = fromWei(election.funds.toString(), "ether");
-
-    // let electionAdrToPay = payoutRatio.map(d => {
-    //   return d.address;
-    // });
-
-    // console.log({payoutRatio})
-
-    // let electionWeiToPay = payoutRatio
-    //   .map(d => {
-    //     return d.ratio;
-    //   })
-    //   .map(c => {
-    //     return c * (ethFunds ? Number(ethFunds) : 0);
-    //   })
-    //   .map(b => {
-    //     return toWei(b.toFixed(18).toString());
-    //   });
-
-    // // console.log("electionWeiToPay ", { electionWeiToPay });
-
-    // setElectionAddressesToPay(electionAdrToPay);
-    // setElectionWeisToPay(electionWeiToPay);
-
-    // if (tableDataSrc) {
-    //   electionWeiToPay.forEach((w, i) => {
-    //     tableDataSrc[i].payout = w;
-    //   });
-    // }
-    // if ( tableDataSrc ) {
-
-    //   for ( let i = 0; i < payoutInfo.candidates.length; i++ ) {
-    //     console.log(payoutInfo.payout[i]);
-    //     tableDataSrc[i].payout = payoutInfo.payout[i];
-    //   }
-
-    // payoutInfo.payout.forEach((w, i) => {
-    //   tableDataSrc[i].payout = w;
-    // });
-    // }
+    // console.log({ payoutInfo });
+    return payoutInfo;
   };
 
   // useEffect(() => {
@@ -452,7 +383,7 @@ export default function Voting({
                 End
               </Button>
             ),
-            canEndElection && !isElectionActive && (
+            canEndElection && !isElectionActive && !isElecPayoutComplete && (
               <Button type="danger" size="large" style={{ margin: 4 }} onClick={() => payoutTokens()}>
                 💸 Payout
               </Button>
@@ -464,10 +395,14 @@ export default function Voting({
             ),
           ]}
         >
-          <h2>Cast your votes for Election: {elecName}</h2>
+          <h2>Election: {elecName}</h2>
           <Space split={<Divider type="vertical" />}>
             <h3>Total funds to distribute: {totalFunds} ETH</h3>
             <h3>Votes remaining: {remainTokens}</h3>
+            <h3>
+              Status: {isElectionActive && <span>Active</span>}
+              {!isElectionActive && <span>Inactive</span>}
+            </h3>
           </Space>
           <Divider />
           {isElectionActive && !alreadyVoted && <Table dataSource={tableDataSrc} columns={voting_columns} />}
