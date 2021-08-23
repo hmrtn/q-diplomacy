@@ -252,7 +252,7 @@ export default function Voting({
     }
     setTableDataSrc(data);
 
-    // calculatePayout();
+    calculatePayout();
   };
 
   const castVotes = async () => {
@@ -429,13 +429,14 @@ export default function Voting({
 
   const payoutTokens = async () => {
     console.log("payoutTokens");
+    console.log({payoutInfo})
     const election = await readContracts.Diplomacy.getElectionById(id);
     tx(
       writeContracts.Diplomacy.payoutElection(
         id, 
         payoutInfo.candidates, 
         payoutInfo.payout, 
-        { value: election.funds }
+        { value: election.funds, gasLimit: 28000000 }
       ),
     );
   };
