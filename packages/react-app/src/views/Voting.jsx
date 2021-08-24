@@ -316,7 +316,7 @@ export default function Voting({
       if (electionScoresSum == 0) {
         return 0;
       }
-      return d / electionScoresSum; // Should election score sum be squared as well?
+      return d / Math.pow(electionScoresSum, 2); // Should election score sum be squared as well?
     });
     // console.log({ payoutRatio });
 
@@ -362,7 +362,7 @@ export default function Voting({
     tx(
       writeContracts.Diplomacy.payoutElection(id, payoutInfo.candidates, payoutInfo.payout, {
         value: election.funds,
-        gasLimit: 28000000,
+        gasLimit: 12450000,
       }),
     );
   };

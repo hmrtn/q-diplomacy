@@ -179,7 +179,7 @@ contract Diplomacy is AccessControl, Ownable {
             paySum += _pay[i];
         }
 
-        // require( paySum == elections[electionId].funds,  "Payout-Election Funds Mismatch!" );
+        require( paySum == elections[electionId].funds,  "Payout-Election Funds Mismatch!" );
         // require(
         //     paySum >= msg.sender.balance,
         //     "Sender does not have enough funds!"
