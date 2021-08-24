@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.elections-view {
+  background: linear-gradient(to bottom, #ffffff, #ffffff);
+  box-shadow: 0px 5px 82px -24px;
+  border-radius: 0.8em;
+}
+
+.voting-view {
+  background: linear-gradient(to bottom, #ffffff, #ffffff);
+  box-shadow: 0px 5px 82px -24px;
+  border-radius: 0.8em;
+}
+
+.ant-modal-content {
+  border-radius: 0.8em;
+}
+
+
+.ant-divider-horizontal.ant-divider-with-text {
+  color: rgb(0 0 0 / 18%);
+}
