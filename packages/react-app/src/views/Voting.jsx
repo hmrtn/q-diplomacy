@@ -24,7 +24,7 @@ import { useEventListener, useOnBlock } from "../hooks";
 import { fromWei, toWei, toBN } from "web3-utils";
 import { BigNumber } from "ethers";
 import { CodeSandboxSquareFilled } from "@ant-design/icons";
-import { Address } from "../components";
+import { Address, SpiderChart } from "../components";
 
 export default function Voting({
   address,
@@ -51,6 +51,7 @@ export default function Voting({
   const [electionWeisToPay, setElectionWeisToPay] = useState([]);
   const [electionAddressesToPay, setElectionAddressesToPay] = useState([]);
 
+  const [chartData, setChartData] = useState([[], []]);
   //   useOnBlock(localProvider, () => {
   //     console.log(`⛓ A new localProvider block is here: ${localProvider._lastBlockNumber}`);
   //   });
@@ -244,6 +245,11 @@ export default function Voting({
       data.push({ key: i, name: name, address: addr, n_votes: 0, score: scoresSum, payout: weiToPay });
     }
 
+    setChartData(data.reduce((tupleArray, tuple) => [
+      [...tupleArray[0], tuple.name],
+      [...tupleArray[1], parseFloat(tuple.score)],
+    ] ,[[],[]]));
+    
     let payoutInfo = await calculatePayout();
     payoutInfo.payout.forEach((p, i) => {
       data[i].payout = p;
@@ -426,6 +432,10 @@ export default function Voting({
             </Button>
           )} */}
         </PageHeader>
+
+        <Divider />
+
+        <SpiderChart data={} names={} title={"Vote Distribution"} chartType="area" />
       </div>
     </>
   );
