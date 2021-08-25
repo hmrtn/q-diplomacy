@@ -28,8 +28,8 @@ export default function Elections({
   const [numElections, setNumElections] = useState(0);
   const [tableDataSrc, setTableDataSrc] = useState([]);
   const [newElecName, setNewElecName] = useState("");
-  const [newElecAllocatedVotes, setNewElecAllocatedVotes] = useState(10);
-  const [newElecAllocatedFunds, setNewElecAllocatedFunds] = useState(1);
+  const [newElecAllocatedVotes, setNewElecAllocatedVotes] = useState(null);
+  const [newElecAllocatedFunds, setNewElecAllocatedFunds] = useState(null);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -277,6 +277,8 @@ export default function Elections({
   const [addresses, setAddresses] = useState([]);
   const [toAddress, setToAddress] = useState("");
 
+  const [canContinue, setCanContinue] = useState(false);
+
   return (
     <>
       <Modal visible={isModalVisible} footer={false} onCancel={handleCancel}>
@@ -304,25 +306,36 @@ export default function Elections({
                   }}
                 />
               </Form.Item>
-              <Form.Item name="funds" label="Funds" rules={[{ required: true, message: "Please input funds!" }]}>
+              <Form.Item 
+                name="funds" 
+                label="Funds" 
+                rules={[
+                  { required: true, pattern: new RegExp(/^[0-9]+$/), message: "ETH Funds Required!" }, 
+                ]}
+              >
                 <EtherInput
-                  // autofocus
+                  type="number"
                   price={price}
                   value={newElecAllocatedFunds}
                   placeholder="Enter amount"
                   onChange={value => {
-                    // console.log(value)
-                    // console.log(typeof value)
-                    let weiValue = toWei(Number(value).toFixed(18).toString());
-                    setNewElecAllocatedFunds(weiValue);
-                    // value ? setNewElecAllocatedFunds(toWei(value.toFixed(18))) : toWei("0", "ether");
+                    if (!isNaN(Number(value))) {
+                      let weiValue = toWei(Number(value).toFixed(18).toString());
+                      setNewElecAllocatedFunds(weiValue);
+                      // setCanContinue(true);
+                    } else {
+                      setCanContinue(false);
+                    }
                   }}
                 />
               </Form.Item>
               <Form.Item
                 name="votes"
                 label="Vote Allocation"
-                rules={[{ required: true, message: "Please input number of votes!" }]}
+                rules={[
+                  { required: true, message: "Please input number of votes!" }, 
+                  { pattern: new RegExp(/^[0-9]+$/), message: "Invalid Vote Allocation!" }
+                ]}
               >
                 <InputNumber
                   size="large"
@@ -348,6 +361,7 @@ export default function Elections({
                     onClick={() => {
                       slider.current.next();
                     }}
+                    disabled={!canContinue}
                   >
                     Continue
                   </Button>
