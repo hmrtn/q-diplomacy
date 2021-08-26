@@ -316,14 +316,15 @@ export default function Voting({
       if (electionScoresSum == 0) {
         return 0;
       }
-      return d / Math.pow(electionScoresSum, 2); // Should election score sum be squared as well?
+      return d / electionScoresSum; // Should election score sum be squared as well?
     });
     // console.log({ payoutRatio });
 
+    // NOTE: Borked: Payout is rounding in a funky way, breaking the validator contract-side
     ethToPay = payoutRatio.map(d => {
       return electionFundsEth * d;
     });
-    // console.log({ ethToPay });
+    console.log({ ethToPay });
 
     payoutInfo.candidates = candidates;
     payoutInfo.payout = ethToPay.map(String).map(d => {
