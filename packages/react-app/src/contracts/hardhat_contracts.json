@@ -5,7 +5,7 @@
       "chainId": "4",
       "contracts": {
         "Diplomacy": {
-          "address": "0xFC62D8e5C818CB729E93d3cf94B8064c6766Eb15",
+          "address": "0x8858d7e8B5c14066bEae4e6dd0EC62e6FbC4BEa3",
           "abi": [
             {
               "inputs": [],
@@ -36,7 +36,7 @@
                 {
                   "indexed": false,
                   "internalType": "string[]",
-                  "name": "votes",
+                  "name": "scores",
                   "type": "string[]"
                 }
               ],
@@ -233,7 +233,7 @@
                 },
                 {
                   "internalType": "string[]",
-                  "name": "_votes",
+                  "name": "_scores",
                   "type": "string[]"
                 }
               ],
@@ -278,9 +278,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "int256",
+                  "internalType": "uint256",
                   "name": "votes",
-                  "type": "int256"
+                  "type": "uint256"
                 },
                 {
                   "internalType": "address",
@@ -340,9 +340,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "int256",
+                  "internalType": "uint256",
                   "name": "votes",
-                  "type": "int256"
+                  "type": "uint256"
                 },
                 {
                   "internalType": "address",
@@ -576,9 +576,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "int256",
+                  "internalType": "uint256",
                   "name": "_votes",
-                  "type": "int256"
+                  "type": "uint256"
                 },
                 {
                   "internalType": "address[]",
@@ -1480,7 +1480,7 @@
                 {
                   "indexed": false,
                   "internalType": "string[]",
-                  "name": "scores",
+                  "name": "votes",
                   "type": "string[]"
                 }
               ],
@@ -1677,7 +1677,7 @@
                 },
                 {
                   "internalType": "string[]",
-                  "name": "_scores",
+                  "name": "_votes",
                   "type": "string[]"
                 }
               ],
@@ -1722,9 +1722,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "uint256",
+                  "internalType": "int256",
                   "name": "votes",
-                  "type": "uint256"
+                  "type": "int256"
                 },
                 {
                   "internalType": "address",
@@ -1784,9 +1784,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "uint256",
+                  "internalType": "int256",
                   "name": "votes",
-                  "type": "uint256"
+                  "type": "int256"
                 },
                 {
                   "internalType": "address",
@@ -2020,9 +2020,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "uint256",
+                  "internalType": "int256",
                   "name": "_votes",
-                  "type": "uint256"
+                  "type": "int256"
                 },
                 {
                   "internalType": "address[]",
