@@ -11,6 +11,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     // args: [ "Hello", utils.parseEther("1.5") ],
     log: true,
   });
+  console.log({deployer})
 
   /*
     // Getting a previously deployed contract

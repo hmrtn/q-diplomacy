@@ -309,7 +309,7 @@ export default function Voting({
       if (electionScoresSum == 0) {
         return 0;
       }
-      return d / electionScoresSum; // Should election score sum be squared as well?
+      return Math.pow(d, 2) / Math.pow(electionScoresSum, 2); // Should election score sum be squared as well?
     });
     // console.log({ payoutRatio });
 
@@ -322,12 +322,12 @@ export default function Voting({
     payoutInfo.candidates = candidates;
     payoutInfo.payout = ethToPay.map(String).map(d => {
       let d_num = Number(d);
-      d_num = d_num.toFixed(10);
+      d_num = d_num.toFixed(18);
       return toWei(d_num);
     }, 0);
 
     // setPayoutInfo(candidatesPayoutInfo);
-    // console.log({ payoutInfo });
+    console.log({ payoutInfo });
     return payoutInfo;
   };
 
