@@ -47,17 +47,10 @@ export default function Voting({
   const [canEndElection, setCanEndElection] = useState(false);
   const [isElectionActive, setIsElectionActive] = useState(false);
   const [isElecPayoutComplete, setIsElecPayoutComplete] = useState(false);
+  const [isVoting, setIsVoting] = useState(false);
 
   const [electionWeisToPay, setElectionWeisToPay] = useState([]);
   const [electionAddressesToPay, setElectionAddressesToPay] = useState([]);
-
-  //   useOnBlock(localProvider, () => {
-  //     console.log(`⛓ A new localProvider block is here: ${localProvider._lastBlockNumber}`);
-  //   });
-
-  const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
-  const electionEndedEvent = useEventListener(readContracts, "Diplomacy", "ElectionEnded", localProvider, 1);
-  const electionPayoutEvent = useEventListener(readContracts, "Diplomacy", "ElectionPaid", localProvider, 1);
 
   const voting_columns = [
     // {
@@ -160,49 +153,44 @@ export default function Voting({
     }
   }, [readContracts]);
 
-  useEffect(() => {
-    console.log("ballotCastEvent ", ballotCastEvent.length);
-    if (ballotCastEvent && ballotCastEvent.length == 0) {
-      return;
-    }
-    if (readContracts) {
-      if (readContracts.Diplomacy) {
-        updateView();
-      }
-    }
-  }, [ballotCastEvent]);
-
-  useEffect(() => {
-    if (electionEndedEvent && electionEndedEvent.length == 0) {
-      return;
-    }
-    if (readContracts) {
-      if (readContracts.Diplomacy) {
-        console.log("Election ended event");
-        updateView();
-        // updatePayoutDistribution();
-      }
-    }
-  }, [electionEndedEvent]);
-
-  useEffect(() => {
-    if (electionPayoutEvent && electionPayoutEvent.length == 0) {
-      return;
-    }
-    if (readContracts) {
-      if (readContracts.Diplomacy) {
-        // Stuff
-        updateView();
-      }
-    }
-  }, [electionPayoutEvent]);
-
   const init = async () => {
+    console.log("init");
     updateView();
-    // updatePayoutDistribution();
+    let contractName = "Diplomacy";
+    addEventListener(contractName, "BallotCast", onBallotCast);
+    addEventListener(contractName, "ElectionEnded", onElectionEnded);
+    addEventListener(contractName, "ElectionPaid", onElectionPaid);
+    // console.log("added event listeners");
   };
 
-  //
+  const addEventListener = async (contractName, eventName, callback) => {
+    await readContracts[contractName].removeListener(eventName);
+    readContracts[contractName].on(eventName, (...args) => {
+      let eventBlockNum = args[args.length - 1].blockNumber;
+      if (eventBlockNum >= localProvider._lastBlockNumber) {
+        let msg = args.pop().args;
+        callback(msg);
+      }
+    });
+  };
+
+  function onBallotCast(msg) {
+    console.log("onBallotCast ");
+    if (alreadyVoted || msg.voter == address) {
+      updateView();
+      setIsVoting(false);
+    }
+  }
+
+  function onElectionEnded(msg) {
+    console.log("onElectionEnded");
+    updateView();
+  }
+
+  function onElectionPaid(msg) {
+    console.log("onElectionPaid");
+    updateView();
+  }
 
   const updateView = async () => {
     const election = await readContracts.Diplomacy.getElectionById(id);
@@ -214,7 +202,7 @@ export default function Voting({
     const ethFund = fromWei(funds.toString(), "ether");
     setTotalFunds(ethFund);
     setElecName(election.name);
-    console.log("setTotalVotes ", election.votes.toNumber());
+    // console.log("setTotalVotes ", election.votes.toNumber());
     setTotalVotes(election.votes.toNumber());
     const hasVoted = await readContracts.Diplomacy.hasVoted(id, address);
     setAlreadyVoted(hasVoted);
@@ -249,11 +237,13 @@ export default function Voting({
       data[i].payout = p;
     });
 
+    console.log("updateView called");
     setTableDataSrc(data);
   };
 
   const castVotes = async () => {
     console.log("castVotes");
+    setIsVoting(true);
     const election = await readContracts.Diplomacy.getElectionById(id);
     const adrs = election.candidates; // hmm...
     console.log(adrs);
@@ -266,6 +256,9 @@ export default function Voting({
       console.log("📡 Transaction Update:", update);
       if (update && (update.status === "confirmed" || update.status === 1)) {
         console.log(" 🍾 Transaction " + update.hash + " finished!");
+      } else {
+        console.log("update error ", update.status);
+        setIsVoting(false);
       }
     });
     console.log("awaiting metamask/web3 confirm result...", result);
@@ -328,21 +321,15 @@ export default function Voting({
 
     payoutInfo.candidates = candidates;
     payoutInfo.payout = ethToPay.map(String).map(d => {
-      return toWei(d);
+      let d_num = Number(d);
+      d_num = d_num.toFixed(10);
+      return toWei(d_num);
     }, 0);
 
     // setPayoutInfo(candidatesPayoutInfo);
     // console.log({ payoutInfo });
     return payoutInfo;
   };
-
-  // useEffect(() => {
-  //   console.log("SEE ME")
-  //   console.log(payoutInfo)
-  //   payoutInfo.payout.forEach((w, i) => {
-  //     tableDataSrc[i].payout = w;
-  //   });
-  // }, [payoutInfo.payout])
 
   const endElection = async () => {
     calculatePayout();
@@ -390,7 +377,7 @@ export default function Voting({
               </Button>
             ),
             isElectionActive && !alreadyVoted && (
-              <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
+              <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()} loading={isVoting}>
                 🗳️ Vote
               </Button>
             ),

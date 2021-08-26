@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import { Address, Balance } from "../components";
 
-import { useEventListener, useExchangePrice } from "../hooks";
+import { useEventListener, useOnBlock } from "../hooks";
 import AddressInput from "../components/AddressInput";
 import EtherInput from "../components/EtherInput";
 
@@ -56,22 +56,7 @@ export default function Elections({
 
   function viewElection(record) {
     route_history.push("/voting/" + record.key);
-    // console.log("record ", record);
   }
-
-  const endElection = async record => {
-    const result = tx(writeContracts.Diplomacy.endElection(record.key), update => {
-      console.log("📡 Transaction Update:", update);
-      if (update && (update.status === "confirmed" || update.status === 1)) {
-        console.log(" 🍾 Transaction " + update.hash + " finished!");
-      }
-    });
-    console.log("awaiting metamask/web3 confirm result...", result);
-    console.log(await result);
-  };
-
-  const electionCreatedEvent = useEventListener(readContracts, "Diplomacy", "ElectionCreated", localProvider, 1);
-  const ballotCastEvent = useEventListener(readContracts, "Diplomacy", "BallotCast", localProvider, 1);
 
   const columns = [
     {
@@ -162,45 +147,39 @@ export default function Elections({
     }
   }, [readContracts]);
 
-  useEffect(async () => {
-    if (electionCreatedEvent && electionCreatedEvent.length == 0) {
-      return;
-    }
-    if (readContracts) {
-      if (readContracts.Diplomacy) {
-        const numElectionsNew = (await readContracts.Diplomacy.numElections()).toNumber();
-        if (numElectionsNew > numElections) {
-          //   console.log("electionCreatedEvent ", electionCreatedEvent);
-          updateView();
-          setIsCreating(false);
-          // setNewElecAddr([]);
-          setAddresses([]);
-          setNewElecName("");
-          form.resetFields();
-          if ( slider && slider.current ) {
-          slider.current.goTo(0);
-          }
-        }
-      }
-    }
-  }, [electionCreatedEvent]);
-
-  useEffect(() => {
-    if (ballotCastEvent && ballotCastEvent.length == 0) {
-      return;
-    }
-    if (readContracts) {
-      if (readContracts.Diplomacy) {
-        console.log("ballot cast event");
-        updateView();
-      }
-    }
-  }, [ballotCastEvent]);
-
   const init = async () => {
     console.log("contract loaded ", address);
+    //listen to events
+    let contractName = "Diplomacy";
+    addEventListener(contractName, "ElectionCreated", onElectionCreated);
+    addEventListener(contractName, "BallotCast", onBallotCast);
     updateView();
   };
+
+  const addEventListener = async (contractName, eventName, callback) => {
+    await readContracts[contractName].removeListener(eventName);
+    readContracts[contractName].on(eventName, (...args) => {
+      let eventBlockNum = args[args.length - 1].blockNumber;
+      if (eventBlockNum >= localProvider._lastBlockNumber) {
+        callback();
+      }
+    });
+  };
+
+  function onElectionCreated() {
+    console.log("onElectionCreated");
+    setIsCreating(false);
+    form.resetFields();
+    if (slider && slider.current) {
+      slider.current.goTo(0);
+    }
+    updateView();
+  }
+
+  function onBallotCast() {
+    console.log("onBallotCast");
+    updateView();
+  }
 
   const updateView = async () => {
     console.log("updateView ");
@@ -243,6 +222,7 @@ export default function Elections({
         status: status,
       });
     }
+    data = data.reverse();
     setTableDataSrc(data);
   };
 
@@ -269,8 +249,6 @@ export default function Elections({
         }
       },
     );
-    // console.log("awaiting metamask/web3 confirm result...", result);
-    // console.log(await result);
   };
   const slider = useRef(null);
 
@@ -297,21 +275,24 @@ export default function Elections({
                 title="Create A New Election"
                 // subTitle="Election Options"
               />
-              <Form.Item name="name" label="Name" rules={[{ required: true, message: "Please input election name!" }]}>
+              <Form.Item
+                name="elec_name"
+                label="Name"
+                rules={[{ required: true, message: "Please input election name!" }]}
+              >
                 <Input
                   size="large"
                   placeholder="Election Name"
+                  autoComplete="false"
                   onChange={e => {
                     e.target.value ? setNewElecName(e.target.value) : null;
                   }}
                 />
               </Form.Item>
-              <Form.Item 
-                name="funds" 
-                label="Funds" 
-                rules={[
-                  { required: true, pattern: new RegExp(/^[0-9]+$/), message: "ETH Funds Required!" }, 
-                ]}
+              <Form.Item
+                name="funds"
+                label="Funds"
+                // rules={[{ required: true, pattern: new RegExp(/^[0-9]+$/), message: "ETH Funds Required!" }]}
               >
                 <EtherInput
                   type="number"
@@ -322,7 +303,7 @@ export default function Elections({
                     if (!isNaN(Number(value))) {
                       let weiValue = toWei(Number(value).toFixed(18).toString());
                       setNewElecAllocatedFunds(weiValue);
-                      // setCanContinue(true);
+                      setCanContinue(true);
                     } else {
                       setCanContinue(false);
                     }
@@ -333,8 +314,8 @@ export default function Elections({
                 name="votes"
                 label="Vote Allocation"
                 rules={[
-                  { required: true, message: "Please input number of votes!" }, 
-                  { pattern: new RegExp(/^[0-9]+$/), message: "Invalid Vote Allocation!" }
+                  { required: true, message: "Please input number of votes!" },
+                  { pattern: new RegExp(/^[0-9]+$/), message: "Invalid Vote Allocation!" },
                 ]}
               >
                 <InputNumber
@@ -504,7 +485,7 @@ export default function Elections({
 
       <div
         className="elections-view"
-        style={{ border: "1px solid #cccccc", padding: 16, width: 900, margin: "auto", marginTop: 64 }}
+        style={{ border: "1px solid #cccccc", padding: 16, width: 1000, margin: "auto", marginTop: 64 }}
       >
         <PageHeader
           ghost={false}
@@ -517,7 +498,7 @@ export default function Elections({
           ]}
         />
         <Divider />
-        <Table dataSource={tableDataSrc} columns={columns} />
+        <Table dataSource={tableDataSrc} columns={columns} pagination={{ pageSize: 5 }} />
       </div>
     </>
   );
