@@ -342,7 +342,7 @@ export default function Elections({
                     onClick={() => {
                       slider.current.next();
                     }}
-                    disabled={!canContinue}
+                    //disabled={!canContinue}
                   >
                     Continue
                   </Button>

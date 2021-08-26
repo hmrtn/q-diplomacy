@@ -1480,7 +1480,7 @@
                 {
                   "indexed": false,
                   "internalType": "string[]",
-                  "name": "votes",
+                  "name": "scores",
                   "type": "string[]"
                 }
               ],
@@ -1677,7 +1677,7 @@
                 },
                 {
                   "internalType": "string[]",
-                  "name": "_votes",
+                  "name": "_scores",
                   "type": "string[]"
                 }
               ],
@@ -1722,9 +1722,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "int256",
+                  "internalType": "uint256",
                   "name": "votes",
-                  "type": "int256"
+                  "type": "uint256"
                 },
                 {
                   "internalType": "address",
@@ -1784,9 +1784,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "int256",
+                  "internalType": "uint256",
                   "name": "votes",
-                  "type": "int256"
+                  "type": "uint256"
                 },
                 {
                   "internalType": "address",
@@ -2020,9 +2020,9 @@
                   "type": "uint256"
                 },
                 {
-                  "internalType": "int256",
+                  "internalType": "uint256",
                   "name": "_votes",
-                  "type": "int256"
+                  "type": "uint256"
                 },
                 {
                   "internalType": "address[]",

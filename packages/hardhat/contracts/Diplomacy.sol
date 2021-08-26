@@ -18,12 +18,11 @@ contract Diplomacy is AccessControl, Ownable {
         uint256 createdAt; // Creation block time-stamp
         address[] candidates; // Candidates (who can vote/be voted)
         uint256 funds;
-        int256 votes;
+        uint256 votes;  // Number of votes delegated to each candidate
         address admin;
         mapping(address => bool) voted; // Voter status
-        // mapping (address => int256) scores;     // Voter to active-election score (sum of root votes)
-        mapping(address => string[]) scores;
-        mapping(address => int256) results; // Voter to closed-election result (score ** 2)
+        mapping(address => string[]) scores; // string of sqrt votes
+        mapping(address => int256) results; // Voter to closed-election result 
     }
 
     constructor() {
@@ -34,7 +33,7 @@ contract Diplomacy is AccessControl, Ownable {
         address voter,
         uint256 electionId,
         address[] adrs,
-        string[] votes
+        string[] scores
     );
     event ElectionCreated(address creator, uint256 electionId);
     event ElectionEnded(uint256 electionId);
@@ -80,24 +79,15 @@ contract Diplomacy is AccessControl, Ownable {
     modifier validElectionVote(
         uint256 electionId,
         address[] memory _adrs,
-        int256[] memory _votes
+        string[] memory _scores
     ) {
         require(elections[electionId].active, "Election Not Active!");
-        require(_adrs.length == _votes.length, "Address-Vote Mismatch!");
         require(
             !elections[electionId].voted[msg.sender],
             "Sender already voted!"
         );
-        int256 voteSum = 0;
-        for (uint256 i = 0; i < _adrs.length; i++) {
-            require(
-                _adrs[i] == elections[electionId].candidates[i],
-                "Address-Candidate Mismatch!"
-            );
-            require(_votes[i] >= 0, "Invalid Vote! Vote(s) < 0");
-            voteSum += _votes[i];
-        }
-        require(voteSum == elections[electionId].votes, "Vote Miscount!");
+        require ( _scores.length == _adrs.length, "Scores Candidate Count Mismatch!" );
+        //require ( _scores.length == elections[electionId].votes, "Not enough votes sent!" );
         _;
     }
 
@@ -107,9 +97,10 @@ contract Diplomacy is AccessControl, Ownable {
     function newElection(
         string memory _name,
         uint256 _funds,
-        int256 _votes,
+        uint256 _votes,
         address[] memory _adrs
     ) public returns (uint256 electionId) {
+
         electionId = numElections++;
         Election storage election = elections[electionId];
         election.name = _name;
@@ -130,19 +121,18 @@ contract Diplomacy is AccessControl, Ownable {
     function castBallot(
         uint256 electionId,
         address[] memory _adrs,
-        string[] memory _votes // sqrt of votes
-    ) public onlyElectionCandidate(electionId) {
-        //  validElectionVote(electionId, _adrs, _votes) {
+        string[] memory _scores // sqrt of votes
+    ) public onlyElectionCandidate(electionId) validElectionVote(electionId, _adrs, _scores) {
 
         Election storage election = elections[electionId];
 
         for (uint256 i = 0; i < _adrs.length; i++) {
-            election.scores[_adrs[i]].push(_votes[i]); //PRBMathSD59x18.sqrt(_votes[i]);
+            election.scores[_adrs[i]].push(_scores[i]); 
         }
 
         election.voted[msg.sender] = true;
 
-        emit BallotCast(msg.sender, electionId, _adrs, _votes);
+        emit BallotCast(msg.sender, electionId, _adrs, _scores);
     }
 
     function endElection(uint256 electionId)
@@ -152,11 +142,6 @@ contract Diplomacy is AccessControl, Ownable {
         Election storage election = elections[electionId];
 
         require(election.active, "Election Already Ended!");
-
-        // for ( uint i = 0; i < election.candidates.length; i++ ) {
-        //   address candidate = election.candidates[i];
-        //   election.results[candidate] = PRBMathSD59x18.pow(election.scores[candidate], 2);
-        // }
 
         election.active = false;
 
@@ -179,15 +164,10 @@ contract Diplomacy is AccessControl, Ownable {
             paySum += _pay[i];
         }
 
-        require( paySum == elections[electionId].funds,  "Payout-Election Funds Mismatch!" );
-        // require(
-        //     paySum >= msg.sender.balance,
-        //     "Sender does not have enough funds!"
-        // );
+        //require( paySum >= elections[electionId].funds,  "Payout-Election Funds Mismatch!" );
         // require( msg.value == elections[electionId].funds, "Sender Payout-Funds Mismatch!" );
 
         for (uint256 i = 0; i < _pay.length; i++) {
-            //elections[electionId].candidates.length; i++ ) {
             payable(_adrs[i]).transfer(_pay[i] * 1 wei);
         }
 
@@ -217,7 +197,7 @@ contract Diplomacy is AccessControl, Ownable {
             uint256 n_addr,
             uint256 createdAt,
             uint256 funds,
-            int256 votes,
+            uint256 votes,
             address admin,
             bool isActive,
 			bool paid
