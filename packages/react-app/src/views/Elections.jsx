@@ -183,6 +183,7 @@ export default function Elections({
 
   const updateView = async () => {
     console.log("updateView ");
+    setTableDataLoading(true);
     const numElections = (await readContracts.Diplomacy.numElections()).toNumber();
     // console.log("numElections ", numElections);
     setNumElections(numElections);
@@ -224,6 +225,7 @@ export default function Elections({
     }
     data = data.reverse();
     setTableDataSrc(data);
+    setTableDataLoading(false);
   };
 
   const createNewElection = () => {
@@ -256,10 +258,16 @@ export default function Elections({
   const [toAddress, setToAddress] = useState("");
 
   const [canContinue, setCanContinue] = useState(false);
+  const [tableDataLoading, setTableDataLoading] = useState(false);
+
+  let table_state = {
+    bordered: true,
+    loading: tableDataLoading,
+  };
 
   return (
     <>
-      <Modal visible={isModalVisible} footer={false} onCancel={handleCancel}>
+      <Modal visible={isModalVisible} footer={false} onCancel={handleCancel} width={700}>
         <Form
           form={form}
           name="basic"
@@ -274,6 +282,11 @@ export default function Elections({
                 ghost={false}
                 title="Create A New Election"
                 // subTitle="Election Options"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
               />
               <Form.Item
                 name="elec_name"
@@ -363,7 +376,7 @@ export default function Elections({
                 name="candidates"
                 style={{
                   display: "flex",
-                  justifyContent: "center",
+                  justifyContent: "left",
                   alignItems: "center",
                 }}
               >
@@ -388,25 +401,24 @@ export default function Elections({
               </Form.Item>
               <List
                 style={{ overflow: "auto", height: "200px" }}
+                itemLayout="horizontal"
                 bordered
                 dataSource={addresses}
                 renderItem={(item, index) => (
                   <List.Item>
-                    <div>
-                      <Address address={item} ensProvider={mainnetProvider} fontSize="14pt" />
-                      <Button
-                        type="link"
-                        onClick={async () => {
-                          const updatedAddresses = [...addresses];
-                          updatedAddresses.splice(index, 1);
-                          setAddresses(updatedAddresses);
-                        }}
-                        size="medium"
-                        style={{ marginLeft: "200px" }}
-                      >
-                        ❌
-                      </Button>
-                    </div>
+                    <Address address={item} ensProvider={mainnetProvider} fontSize="14pt" />
+                    <Button
+                      type="link"
+                      onClick={async () => {
+                        const updatedAddresses = [...addresses];
+                        updatedAddresses.splice(index, 1);
+                        setAddresses(updatedAddresses);
+                      }}
+                      size="medium"
+                      style={{ marginLeft: "200px" }}
+                    >
+                      ❌
+                    </Button>
                   </List.Item>
                 )}
               />
@@ -498,7 +510,7 @@ export default function Elections({
           ]}
         />
         <Divider />
-        <Table dataSource={tableDataSrc} columns={columns} pagination={{ pageSize: 5 }} />
+        <Table {...table_state} dataSource={tableDataSrc} columns={columns} pagination={{ pageSize: 5 }} />
       </div>
     </>
   );

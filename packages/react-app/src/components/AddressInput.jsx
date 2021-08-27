@@ -117,17 +117,17 @@ export default function AddressInput(props) {
 
   return (
     <div>
-      {scanner}
+      {/* {scanner} */}
       <Input
         size="large"
         id="0xAddress" // name it something other than address for auto fill doxxing
         name="0xAddress" // name it something other than address for auto fill doxxing
-        autoComplete="off"
+        autoComplete="false"
         autoFocus={props.autoFocus}
         placeholder={props.placeholder ? props.placeholder : "address"}
         prefix={<Blockie address={currentValue} size={8} scale={3} />}
         value={ens || currentValue}
-        addonAfter={scannerButton}
+        style={{ width: 500 }}
         onChange={e => {
           updateAddress(e.target.value);
         }}

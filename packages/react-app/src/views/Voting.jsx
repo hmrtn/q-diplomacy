@@ -45,6 +45,7 @@ export default function Voting({
   const [remainTokens, setRemainTokens] = useState(0);
   const [alreadyVoted, setAlreadyVoted] = useState(false);
   const [canEndElection, setCanEndElection] = useState(false);
+  const [canVoteElection, setCanVoteElection] = useState(false);
   const [isElectionActive, setIsElectionActive] = useState(false);
   const [isElecPayoutComplete, setIsElecPayoutComplete] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
@@ -91,14 +92,12 @@ export default function Voting({
 
   const voted_columns = [
     {
-      title: "Name",
-      dataIndex: "name",
-      key: "created_date",
-    },
-    {
       title: "Address",
       dataIndex: "address",
       key: "address",
+      render: address => (
+        <Address address={address} fontSize="14pt" ensProvider={mainnetProvider} blockExplorer={blockExplorer} />
+      ),
     },
     {
       title: "Current Score",
@@ -116,20 +115,6 @@ export default function Voting({
       },
     },
   ];
-
-  function reverseMapping(obj) {
-    var ret = {};
-    for (var key in obj) {
-      ret[obj[key]] = key;
-    }
-    return ret;
-  }
-  const worker_mapping = {
-    acc_1: "0x76c48E1F02774C40372a3497620D946136136172",
-    acc_2: "0x01684C57AE8a4226271068210Ce1cCED865a5AfC",
-    acc_3: "0xf5De4337Ac5332aF11BffbeC45D950bDDBc1493F",
-    acc_4: "0x4E53E14de4e264AC2C3fF501ed3Bd6c4Ad63B9A1",
-  };
 
   function minusVote(idx) {
     if (tableDataSrc[idx].n_votes > 0) {
@@ -195,6 +180,9 @@ export default function Voting({
   const updateView = async () => {
     const election = await readContracts.Diplomacy.getElectionById(id);
     const isCreator = election.admin == address;
+    const electionCandidates = election.candidates;
+    const isCandidate = electionCandidates.includes(address);
+    setCanVoteElection(isCandidate);
     setCanEndElection(isCreator);
     setIsElectionActive(election.isActive);
     setIsElecPayoutComplete(election.paid);
@@ -209,14 +197,11 @@ export default function Voting({
     if (!hasVoted) {
       setRemainTokens(election.votes.toNumber());
     }
-    const electionCandidates = election.candidates;
+
     // console.log("electionCandidates ", electionCandidates);
     let data = [];
 
-    let reverseWorkerMapping = reverseMapping(worker_mapping);
-
     for (let i = 0; i < electionCandidates.length; i++) {
-      const name = reverseWorkerMapping[electionCandidates[i]];
       const addr = electionCandidates[i];
       const scores = await readContracts.Diplomacy.getElectionScores(id, addr);
       let scoresSum =
@@ -229,7 +214,7 @@ export default function Voting({
               .toFixed(4)
           : "0";
       let weiToPay = 0;
-      data.push({ key: i, name: name, address: addr, n_votes: 0, score: scoresSum, payout: weiToPay });
+      data.push({ key: i, address: addr, n_votes: 0, score: scoresSum, payout: weiToPay });
     }
 
     let payoutInfo = await calculatePayout();
@@ -246,7 +231,6 @@ export default function Voting({
     setIsVoting(true);
     const election = await readContracts.Diplomacy.getElectionById(id);
     const adrs = election.candidates; // hmm...
-    console.log(adrs);
     const votes = [];
     for (let i = 0; i < tableDataSrc.length; i++) {
       votes.push(Math.sqrt(tableDataSrc[i].n_votes).toString());
@@ -393,8 +377,12 @@ export default function Voting({
             </h3>
           </Space>
           <Divider />
-          {isElectionActive && !alreadyVoted && <Table dataSource={tableDataSrc} columns={voting_columns} />}
-          {(alreadyVoted || !isElectionActive) && <Table dataSource={tableDataSrc} columns={voted_columns} />}
+          {isElectionActive && canVoteElection && !alreadyVoted && (
+            <Table dataSource={tableDataSrc} columns={voting_columns} pagination={{ pageSize: 5 }} />
+          )}
+          {(!canVoteElection || alreadyVoted || !isElectionActive) && (
+            <Table dataSource={tableDataSrc} columns={voted_columns} pagination={{ pageSize: 5 }} />
+          )}
           <Divider />
           {/* {isElectionActive && !alreadyVoted && (
             <Button type="primary" size="large" style={{ margin: 4 }} onClick={() => castVotes()}>
