@@ -315,6 +315,8 @@ export default function Voting({
     return payoutInfo;
   };
 
+  //test
+
   const endElection = async () => {
     calculatePayout();
     console.log("endElection");
